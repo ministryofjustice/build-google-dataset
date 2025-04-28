@@ -28,6 +28,7 @@ bin/
 ### Mac OS ###
 .DS_Store
 /.env
+/node_modules/
 /resources/
 /output/*
 !/output/.keep
