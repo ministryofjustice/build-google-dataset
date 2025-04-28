@@ -52,7 +52,7 @@ async function main(): Promise<void> {
 		console.timeEnd(`Batch ${i / CONCURRENCY + 1} - Fetching Drive files`);
 
 		console.time(`Batch ${i / CONCURRENCY + 1} - Data Processing`);
-		// Flatten and add entire batch at once
+		// Flatten and add the entire batch at once
 		accumulatedFiles.push(...batchResults.flat());
 
 		// Write in large chunks instead of file-by-file
@@ -68,6 +68,9 @@ async function main(): Promise<void> {
 	if (accumulatedFiles.length > 0) {
 		CSVUtils.writeOutputCsv(accumulatedFiles, { append: true });
 	}
+
+	console.log('CSVUtils', 'Begin upload process to S3...')
+	CSVUtils.uploadToS3();
 }
 
 main().catch((err) => {
