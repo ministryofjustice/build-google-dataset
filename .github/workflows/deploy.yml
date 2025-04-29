@@ -1,0 +1,60 @@
+name: "Environment build / deploy"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      registry:
+        required: true
+        type: string
+
+jobs:
+  deploy_environment:
+    name: "Deploy"
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Inject environment variables"
+        env:
+          TPL_PATH: "deploy/${{ inputs.environment }}"
+          ECR_URL: ${{ inputs.registry }}/${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: "node-${{ github.sha }}"
+          GOV_NOTIFY_API_KEY: ${{ secrets.GOV_NOTIFY_API_KEY }}
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_DELIVERY_API_TOKEN: ${{ secrets.CONTENTFUL_DELIVERY_API_TOKEN }}
+          EXPRESS_SESSION_SECRET: ${{ secrets.EXPRESS_SESSION_SECRET }}
+          OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+        run: |
+          ## - - - - - - - - - - -
+          ## Perform find/replace
+          ## - - - - - - - - - - -
+
+          < "$TPL_PATH"/secret.tpl.yml envsubst > "$TPL_PATH"/secret.yaml
+          < "$TPL_PATH"/deployment.tpl.yml envsubst > "$TPL_PATH"/deployment.yaml
+          
+          ## Remove template files before apply
+          rm "$TPL_PATH"/*.tpl.yml
+
+      - name: "Authenticate to the cluster"
+        env:
+          KUBE_CERT: ${{ secrets.KUBE_CERT }}
+          KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+          KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+        run: |
+          echo "${KUBE_CERT}" > ca.crt
+          kubectl config set-cluster ${KUBE_CLUSTER} --certificate-authority=./ca.crt --server=https://${KUBE_CLUSTER}
+          kubectl config set-credentials deploy-user --token=${KUBE_TOKEN}
+          kubectl config set-context ${KUBE_CLUSTER} --cluster=${KUBE_CLUSTER} --user=deploy-user --namespace=${KUBE_NAMESPACE}
+          kubectl config use-context ${KUBE_CLUSTER}
+
+      - name: "Apply manifest files"
+        run: |
+          kubectl apply -f deploy/${{ inputs.environment }} -n ${KUBE_NAMESPACE}
