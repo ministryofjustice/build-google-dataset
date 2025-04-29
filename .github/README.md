@@ -41,7 +41,7 @@ $ docker compose up
 ### Minio
 Minio has been installed via docker compose. It is a local S3 compatible object storage server and will help visualise the data being uploaded to the bucket.
 
-> To access the Minio console, open a browser and navigate to [http://localhost:9000](http://localhost:9000).
+> To access the Minio console, open a browser and navigate to [http://localhost:9001](http://localhost:9001).
 
 ---
 
