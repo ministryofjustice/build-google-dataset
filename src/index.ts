@@ -1,10 +1,12 @@
 import {GoogleDriveService} from './googleDriveService';
 import {CSVUtils} from './csvUtils';
+import {S3Utils} from './s3Utils';
 import {FileResult} from "./types/FileResult";
 import {GoogleAuthService} from "./googleAuthService";
 import {MigrationMapper} from "./migrationMapper";
 
 async function main(): Promise<void> {
+	S3Utils.checkWriteAccess();
 	const authService = new GoogleAuthService();
 	const emails = CSVUtils.readEmailAddresses();
 	const migrationLog = CSVUtils.readMigrationLog();
@@ -70,7 +72,7 @@ async function main(): Promise<void> {
 	}
 
 	console.log('CSVUtils', 'Begin upload process to S3...')
-	CSVUtils.uploadToS3();
+	S3Utils.uploadToS3();
 }
 
 main().catch((err) => {

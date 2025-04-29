@@ -2,8 +2,8 @@
 /.env
 /node_modules/
 /resources/
-/output/*
-!/output/.keep
+/build-output/*
+!/build-output/.keep
 
 ### IntelliJ IDEA ###
 out/
