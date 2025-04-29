@@ -110,6 +110,7 @@ export class S3Utils {
    *
    * @information a request to the S3 bucket is made every 6 minutes.
    * @information the cost of 1000 requests is $0.0004.
+   * @information the representative cost over 30 days is $0.00288.
    */
   public static pollS3File(key: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
