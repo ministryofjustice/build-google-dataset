@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${KUBE_NAMESPACE}
+  namespace: ${KUBE_NAMESPACE}
+  labels:
+    app: ${KUBE_NAMESPACE}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 100%
+  selector:
+    matchLabels:
+      app: ${KUBE_NAMESPACE}
+  template:
+    metadata:
+      labels:
+        app: ${KUBE_NAMESPACE}
+    spec:
+      terminationGracePeriodSeconds: 35
+      containers:
+        - name: node
+          image: ${ECR_URL}:${IMAGE_TAG}
+          resources:
+            limits:
+              cpu: 500m
+              memory: 2000Mi
+            requests:
+              cpu: 50m
+              memory: 1000Mi
+          securityContext:
+            runAsUser: 1000
+          env:
+            - name: S3_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: s3-bucket-output
+                  key: bucket_name
