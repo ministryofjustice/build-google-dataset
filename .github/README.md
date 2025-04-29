@@ -14,13 +14,15 @@
 
 </div>
 
-Guidance and information for working to the Government Service Standard in the Ministry of Justice.
+Used by the Google Decommissioning team
+to map document links from Google Drive to the new MS document management system.
 
 
 ## Prerequisites
 
 > [!NOTE]
-> To run this application locally you will need to have Docker installed and running on your machine.
+> To run this application locally, you will need to have Docker installed and running on your machine.
+> You will also need two credential files that can be provided by the team.
 > You can find instructions for installing Docker [here](https://docs.docker.com/get-docker/).
 
 
