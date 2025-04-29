@@ -126,7 +126,7 @@ export class CSVUtils {
 		const fileStream = fs.createReadStream(OUTPUT_CSV);
 		const uploadParams = {
 			Bucket: process.env.AWS_S3_BUCKET,
-			Key: 'output/dataset.csv',
+			Key: 'build-output/dataset.csv',
 			Body: fileStream,
 			ContentType: 'text/csv'
 		};
