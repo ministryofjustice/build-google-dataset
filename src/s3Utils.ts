@@ -100,7 +100,7 @@ export class S3Utils {
 
   /**
    * @description Polls the S3 bucket for a file with the specified key.
-   * It checks every 6 minutes for up to 24 hours.
+   * It checks every 6 minutes.
    * If the file is found, it resolves the promise with true.
    * If the file is not found after 24 hours, it logs output and resets before trying again.
    *
