@@ -27,21 +27,15 @@ jobs:
           TPL_PATH: "deploy/${{ inputs.environment }}"
           ECR_URL: ${{ inputs.registry }}/${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: "node-${{ github.sha }}"
-          GOV_NOTIFY_API_KEY: ${{ secrets.GOV_NOTIFY_API_KEY }}
-          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
-          CONTENTFUL_DELIVERY_API_TOKEN: ${{ secrets.CONTENTFUL_DELIVERY_API_TOKEN }}
-          EXPRESS_SESSION_SECRET: ${{ secrets.EXPRESS_SESSION_SECRET }}
-          OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
         run: |
           ## - - - - - - - - - - -
           ## Perform find/replace
           ## - - - - - - - - - - -
 
-          < "$TPL_PATH"/secret.tpl.yml envsubst > "$TPL_PATH"/secret.yaml
           < "$TPL_PATH"/deployment.tpl.yml envsubst > "$TPL_PATH"/deployment.yaml
           
           ## Remove template files before apply
-          rm "$TPL_PATH"/*.tpl.yml
+          rm "$TPL_PATH"/deployment.tpl.yml
 
       - name: "Authenticate to the cluster"
         env:
