@@ -21,7 +21,7 @@ ENTRYPOINT ["ash", "-c", "/home/node/bin/app-install.sh"]
 
 FROM base-node AS build-prod
 
-RUN npm i
+RUN npm build
 
 USER 1000
 
