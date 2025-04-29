@@ -46,7 +46,7 @@ export class CSVUtils {
 	/**
 	 * Writes a list of FileResults to the output CSV.
 	 * By default, it overwrites OUTPUT_CSV.
-	 * If options.append is true, it will append without writing the header if the file already exists.
+	 * If `options.append` is true, it will append without writing the header if the file already exists.
 	 */
 	public static writeOutputCsv( fileResults: FileResult[], options?: { append?: boolean } ): void {
 		const shouldAppend = options?.append === true;
@@ -88,7 +88,7 @@ export class CSVUtils {
 		const needsHeader = !fileExists || !shouldAppend;
 
 		// Build the final CSV content to write
-		// (header only if new file or not appending)
+		// (header only if a new file or not appending)
 		const rowsToWrite = needsHeader
 			? [headerRow.join(','), ...dataRows]
 			: dataRows;
