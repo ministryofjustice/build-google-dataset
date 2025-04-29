@@ -1,7 +1,15 @@
+### Application ###
+/.env
+/node_modules/
+/resources/
+/output/*
+!/output/.keep
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+/.idea/
 
 ### Eclipse ###
 .apt_generated
@@ -27,9 +35,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-/.env
-/node_modules/
-/resources/
-/output/*
-!/output/.keep
-/.idea/
+
