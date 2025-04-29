@@ -49,22 +49,21 @@ export class S3Utils {
   }
 
   public static uploadToS3(): void {
-		const s3Client = new S3Client(this.getS3ClientParams());
-		const fileStream = fs.createReadStream(OUTPUT_CSV);
-		const uploadParams = {
-			Bucket: process.env.AWS_S3_BUCKET,
-			Key: 'build-output/dataset.csv',
-			Body: fileStream,
-			ContentType: 'text/csv'
-		};
+    const s3Client = new S3Client(this.getS3ClientParams());
+    const fileStream = fs.createReadStream(OUTPUT_CSV);
+    const uploadParams = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: 'build-output/dataset.csv',
+      Body: fileStream,
+      ContentType: 'text/csv'
+    };
 
-		s3Client.send(new PutObjectCommand(uploadParams))
-			.then(() => {
-				console.log(`Successfully uploaded ${OUTPUT_CSV} to S3 bucket.`);
-			})
-			.catch(err => {
-				console.error(`Error uploading to S3: ${err}`);
-			});
-
-	}
+    s3Client.send(new PutObjectCommand(uploadParams))
+      .then(() => {
+        console.log(`Successfully uploaded ${OUTPUT_CSV} to S3 bucket.`);
+      })
+      .catch(err => {
+        console.error(`Error uploading to S3: ${err}`);
+      });
+  }
 }
