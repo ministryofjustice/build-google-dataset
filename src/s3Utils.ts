@@ -7,8 +7,6 @@ import {
   type S3ClientConfig,
 } from "@aws-sdk/client-s3";
 
-const s3ClientParams: S3ClientConfig = { region: process.env.AWS_REGION };
-
 export class S3Utils {
 
   // Define the S3 client parameters
@@ -32,7 +30,7 @@ export class S3Utils {
    * If it fails, it will log an error message.
    */
   public static checkWriteAccess(): void {
-    const s3Client = new S3Client(s3ClientParams);
+    const s3Client = new S3Client(this.getS3ClientParams());
     const testFileName = "write-test.txt";
     const testFileContent = "Test access to S3 bucket";
     const uploadParams = {
