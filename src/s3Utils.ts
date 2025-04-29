@@ -101,16 +101,18 @@ export class S3Utils {
   }
 
   /**
-   * Polls the S3 bucket for a file with the specified key.
+   * @description Polls the S3 bucket for a file with the specified key.
    * It checks every 6 minutes for up to 24 hours.
    * If the file is found, it resolves the promise with true.
    * If the file is not found after 24 hours, it logs output and resets before trying again.
+   *
+   * Good to know...
+   * - A request to the S3 bucket is made every 6 minutes.
+   * - The cost of 1000 requests is $0.0004.
+   * - The representative cost over 30 days is $0.00288.
+   *
    * @param key The key of the file to check in the S3 bucket.
    * @returns A promise that resolves to true if the file is found, or rejects with an error if an error occurs.
-   *
-   * @information a request to the S3 bucket is made every 6 minutes.
-   * @information the cost of 1000 requests is $0.0004.
-   * @information the representative cost over 30 days is $0.00288.
    */
   public static pollS3File(key: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
