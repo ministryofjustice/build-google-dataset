@@ -12,7 +12,7 @@ services:
       - .env
     volumes:
       - node_modules:/home/node/node_modules
-      - ./output/:/home/node/output
+      - ./build-output/:/home/node/build-output
 
   minio:
     container_name: google-dataset-minio

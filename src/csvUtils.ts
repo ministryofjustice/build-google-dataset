@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import { EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from './config';
 import { FileResult } from "./types/FileResult";
-import { S3Client, PutObjectCommand, type S3ClientConfig } from "@aws-sdk/client-s3";
 
 export class CSVUtils {
 	public static readEmailAddresses(): string[] {
@@ -108,36 +107,5 @@ export class CSVUtils {
 				`Wrote ${fileResults.length} items to ${OUTPUT_CSV}`
 			);
 		}
-	}
-
-	public static uploadToS3(): void {
-		const s3ClientParams: S3ClientConfig = { region: process.env.AWS_REGION };
-
-		if (process.env.MINIO_USER && process.env.MINIO_PASSWORD) {
-			s3ClientParams.credentials = {
-				accessKeyId: process.env.MINIO_USER,
-				secretAccessKey: process.env.MINIO_PASSWORD
-			};
-			s3ClientParams.endpoint = process.env.MINIO_ENDPOINT;
-			s3ClientParams.forcePathStyle = true;
-		}
-
-		const s3Client = new S3Client(s3ClientParams);
-		const fileStream = fs.createReadStream(OUTPUT_CSV);
-		const uploadParams = {
-			Bucket: process.env.AWS_S3_BUCKET,
-			Key: 'build-output/dataset.csv',
-			Body: fileStream,
-			ContentType: 'text/csv'
-		};
-
-		s3Client.send(new PutObjectCommand(uploadParams))
-			.then(() => {
-				console.log(`Successfully uploaded ${OUTPUT_CSV} to S3 bucket.`);
-			})
-			.catch(err => {
-				console.error(`Error uploading to S3: ${err}`);
-			});
-
 	}
 }
