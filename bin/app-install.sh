@@ -6,5 +6,5 @@ echo "Done."
 
 npm run dev
 
-# for testing locally - remove this line when deploying
+# for testing locally
 tail -f /dev/null
