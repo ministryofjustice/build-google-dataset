@@ -123,7 +123,7 @@ async function main(): Promise<void> {
   await buildDataset();
 
   console.log("S3Utils", "Begin upload process to S3...");
-  S3Utils.uploadToS3();
+  await S3Utils.uploadToS3();
 
   // Remove local files
   await fsPromises.rm("/tmp/resources", { recursive: true, force: true });
