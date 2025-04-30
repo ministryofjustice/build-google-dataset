@@ -58,7 +58,7 @@ export class S3Utils {
    * If the upload is successful, a success message is logged.
    * If it fails, an error message is logged.
    */
-  public static uploadToS3(): void {
+  public static async uploadToS3(): Promise<void> {
     const s3Client = new S3Client(this.getS3ClientParams());
     const fileStream = fs.createReadStream(`/tmp/${OUTPUT_CSV}`);
     const uploadParams = {
@@ -68,14 +68,9 @@ export class S3Utils {
       ContentType: "text/csv",
     };
 
-    s3Client
-      .send(new PutObjectCommand(uploadParams))
-      .then(() => {
-        console.log(`Successfully uploaded /tmp/${OUTPUT_CSV} to S3 bucket.`);
-      })
-      .catch((err) => {
-        console.error(`Error uploading to S3: ${err}`);
-      });
+    await s3Client.send(new PutObjectCommand(uploadParams));
+
+    console.log(`Successfully uploaded /tmp/${OUTPUT_CSV} to S3 bucket.`);
   }
 
   /**
