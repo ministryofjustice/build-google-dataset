@@ -34,7 +34,9 @@ spec:
           securityContext:
             runAsUser: 1000
           env:
-            - name: S3_BUCKET_NAME
+            - name: AWS_REGION
+              value: eu-west-2
+            - name: AWS_S3_BUCKET
               valueFrom:
                 secretKeyRef:
                   name: s3-bucket-output
