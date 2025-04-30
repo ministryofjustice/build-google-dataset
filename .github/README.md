@@ -97,7 +97,6 @@ kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/migration_log
 
 ```bash
 kubectl -n migration-link-exchange-build-dev exec $SPOD -- aws s3 ls s3://$S3_BUCKET/build-output/dataset.csv
-
 ```
 
 ---
