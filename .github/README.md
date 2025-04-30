@@ -43,6 +43,64 @@ Minio has been installed via docker compose. It is a local S3 compatible object 
 
 > To access the Minio console, open a browser and navigate to [http://localhost:9001](http://localhost:9001).
 
+## Deployed app
+
+The app is deployed to Cloud Platform.
+
+### Testing the development environment
+
+The dev environment is on the namespace: `migration-link-exchange-build-dev`.
+
+On dev only, the application can be tested by dropping the following files into the bucket:
+
+- 'resources/user_emails.csv'
+- 'resources/migration_log_input.csv'
+
+This can be done via the service pod.
+
+1. Get the service pod name:
+
+```bash
+SPOD=$(kubectl -n migration-link-exchange-build-dev get pod -l name=migration-link-exchange-build-dev-service-service-pod -o jsonpath='{.items[0].metadata.name}')
+```
+
+2. Get the s3 bucket name
+
+```bash
+S3_BUCKET=$(kubectl get secret s3-bucket-output -n migration-link-exchange-build-dev -o jsonpath='{.data.bucket_name}' | base64 -d)
+```
+
+2. Copy the files to the pod:
+
+```bash
+kubectl -n migration-link-exchange-build-dev cp resources/user_emails.csv $SPOD:/tmp/user_emails.csv
+kubectl -n migration-link-exchange-build-dev cp resources/migration_log_input.csv $SPOD:/tmp/migration_log_input.csv
+```
+
+3. Copy the files to the bucket:
+
+```bash
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- aws s3 cp /tmp/user_emails.csv s3://$S3_BUCKET/resources/user_emails.csv
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- aws s3 cp /tmp/migration_log_input.csv s3://$S3_BUCKET/resources/migration_log_input.csv
+```
+
+4. Delete the files from the pod:
+
+```bash
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/user_emails.csv
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/migration_log_input.csv
+```
+
+5. Check the application logs to see if the files have been processed:
+
+6. Check the processed file in the bucket using head object:
+
+```bash
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- aws s3 cp s3://$S3_BUCKET/build-output/dataset.csv /tmp/dataset.csv
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- cat /tmp/dataset.csv
+
+```
+
 ---
 
 
