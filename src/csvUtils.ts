@@ -4,7 +4,7 @@ import { FileResult } from "./types/FileResult";
 
 export class CSVUtils {
 	public static readEmailAddresses(): string[] {
-		const csvData = fs.readFileSync(EMAIL_INPUT_CSV, 'utf8').trim();
+		const csvData = fs.readFileSync(`/tmp/${EMAIL_INPUT_CSV}`, 'utf8').trim();
 		const lines = csvData.split('\n');
 		const startIndex = lines[0].toLowerCase().includes('email') ? 1 : 0;
 
@@ -17,7 +17,7 @@ export class CSVUtils {
 	public static readMigrationLog(
 		selectedFields = ['SourcePath', 'FullPath', 'DestinationLocation', 'DestinationType']
 	): Record<string, string>[] {
-		const csvData = fs.readFileSync(MIGRATION_LOG_INPUT_CSV, 'utf8').trim();
+		const csvData = fs.readFileSync(`/tmp/${MIGRATION_LOG_INPUT_CSV}`, 'utf8').trim();
 		const lines = csvData.split('\n');
 
 		const headerLine = lines[0].trim();
@@ -49,8 +49,11 @@ export class CSVUtils {
 	 * If `options.append` is true, it will append without writing the header if the file already exists.
 	 */
 	public static writeOutputCsv( fileResults: FileResult[], options?: { append?: boolean } ): void {
+
+		const TMP_OUTPUT_CSV = `/tmp/${OUTPUT_CSV}`;
+
 		const shouldAppend = options?.append === true;
-		const fileExists = fs.existsSync(OUTPUT_CSV);
+		const fileExists = fs.existsSync(TMP_OUTPUT_CSV);
 
 		// The header row for a fresh CSV
 		const headerRow = [
@@ -97,14 +100,14 @@ export class CSVUtils {
 		const csvContent = rowsToWrite.join('\n') + '\n';
 
 		if (shouldAppend) {
-			fs.appendFileSync(OUTPUT_CSV, csvContent, { encoding: 'utf8' });
+			fs.appendFileSync(TMP_OUTPUT_CSV, csvContent, { encoding: 'utf8' });
 			console.log(
-				`Appended ${fileResults.length} items to ${OUTPUT_CSV}`
+				`Appended ${fileResults.length} items to ${TMP_OUTPUT_CSV}`
 			);
 		} else {
-			fs.writeFileSync(OUTPUT_CSV, csvContent, { encoding: 'utf8' });
+			fs.writeFileSync(TMP_OUTPUT_CSV, csvContent, { encoding: 'utf8' });
 			console.log(
-				`Wrote ${fileResults.length} items to ${OUTPUT_CSV}`
+				`Wrote ${fileResults.length} items to ${TMP_OUTPUT_CSV}`
 			);
 		}
 	}

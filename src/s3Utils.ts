@@ -1,14 +1,17 @@
-import * as fs from 'fs';
-import { OUTPUT_CSV } from "./config";
+import * as fs from "node:fs";
+import fsPromises from "node:fs/promises";
+import { EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
 import {
   S3Client,
-  PutObjectCommand,
+  CopyObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
+  PutObjectCommand,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3";
 
 export class S3Utils {
-
   // Define the S3 client parameters
   public static getS3ClientParams(): S3ClientConfig {
     const s3ClientParams: S3ClientConfig = { region: process.env.AWS_REGION };
@@ -57,19 +60,20 @@ export class S3Utils {
    */
   public static uploadToS3(): void {
     const s3Client = new S3Client(this.getS3ClientParams());
-    const fileStream = fs.createReadStream(OUTPUT_CSV);
+    const fileStream = fs.createReadStream(`/tmp/${OUTPUT_CSV}`);
     const uploadParams = {
       Bucket: process.env.AWS_S3_BUCKET,
-      Key: 'build-output/dataset.csv',
+      Key: "build-output/dataset.csv",
       Body: fileStream,
-      ContentType: 'text/csv'
+      ContentType: "text/csv",
     };
 
-    s3Client.send(new PutObjectCommand(uploadParams))
+    s3Client
+      .send(new PutObjectCommand(uploadParams))
       .then(() => {
-        console.log(`Successfully uploaded ${OUTPUT_CSV} to S3 bucket.`);
+        console.log(`Successfully uploaded /tmp/${OUTPUT_CSV} to S3 bucket.`);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(`Error uploading to S3: ${err}`);
       });
   }
@@ -90,7 +94,12 @@ export class S3Utils {
       await s3Client.send(new HeadObjectCommand(params));
       return true;
     } catch (err) {
-      if (err && typeof err === 'object' && 'name' in err && err.name === 'NotFound') {
+      if (
+        err &&
+        typeof err === "object" &&
+        "name" in err &&
+        err.name === "NotFound"
+      ) {
         return false;
       } else {
         throw err;
@@ -116,8 +125,10 @@ export class S3Utils {
     return new Promise((resolve, reject) => {
       let timeoutId: string | number | NodeJS.Timeout | null | undefined = null;
       let attempts = 0;
-      let maxAttempts = 240; // 24 hours
-      const interval = 360000; // 6 minutes
+      // let maxAttempts = 240; // 24 hours
+      // const interval = 360000; // 6 minutes
+      let maxAttempts = 2; // 10 seconds
+      const interval = 5000; // 5 seconds
 
       const checkFile = async () => {
         try {
@@ -138,11 +149,80 @@ export class S3Utils {
             timeoutId = setTimeout(checkFile, interval);
           }
         } catch (err) {
-          reject(err);
+          console.error(`Error checking file ${key}:`, err);
+          resolve(false);
         }
       };
 
       return checkFile();
     });
+  }
+
+  public static async pullResourcesFromS3(): Promise<void> {
+    const resourceKeys = [EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV];
+
+    const s3Client = new S3Client(this.getS3ClientParams());
+  
+    // Delete the local /tmp/resources folder.
+    await fsPromises.rm("/tmp/resources", { recursive: true, force: true });
+
+    // Create the directory.
+    await fsPromises.mkdir("/tmp/resources", { recursive: true });
+    
+    for (const key of resourceKeys) {
+      const downloadParams = {
+        Bucket: process.env.AWS_S3_BUCKET,
+        Key: key,
+      };
+
+      // Ensure the directory exists
+      const localPath = `/tmp/${key}`;
+
+      const command = new GetObjectCommand(downloadParams);
+
+      const res = await s3Client.send(command);
+
+      if (!res.Body) {
+        throw new Error(`No body in response for ${key}`);
+      }
+
+      const bodyString = await res.Body.transformToString();
+
+      // Us async fs to write file
+      await fsPromises.writeFile(localPath, bodyString);
+
+      console.log(`Downloaded ${key} to ${localPath}`);
+    }
+  }
+
+  public static async moveS3ResourceFilesToCompleted(): Promise<void> {
+    const s3Client = new S3Client(this.getS3ClientParams());
+    const resourceKeys = [EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV];
+
+    const timestamp = new Date().toISOString().replace(/:/g, "-");
+    const completedDir = `completed/${timestamp}/`;
+
+    for (const key of resourceKeys) {
+      const destination = key.replace(/resources\//, completedDir);
+      const copyParams = {
+        Bucket: process.env.AWS_S3_BUCKET,
+        CopySource: `${process.env.AWS_S3_BUCKET}/${key}`,
+        Key: destination,
+      };
+
+      await s3Client.send(new CopyObjectCommand(copyParams));
+
+      console.log(`Copied ${key} to ${destination}`);
+
+      // Delete the original file
+      const deleteParams = {
+        Bucket: process.env.AWS_S3_BUCKET,
+        Key: key,
+      };
+
+      await s3Client.send(new DeleteObjectCommand(deleteParams));
+
+      console.log(`Deleted original file ${key}`);
+    }
   }
 }

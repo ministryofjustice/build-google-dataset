@@ -24,6 +24,7 @@
     "esbuild": "^0.25.1",
     "glob": "^11.0.1",
     "googleapis": "^146.0.0",
+    "notifications-node-client": "^8.2.1",
     "ts-node": "^10.9.2"
   }
 }

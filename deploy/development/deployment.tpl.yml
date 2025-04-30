@@ -43,4 +43,4 @@ spec:
                   key: bucket_name
           envFrom:
             - secretRef:
-                name: google-client-credentials
+                name: ${KUBE_NAMESPACE}-secrets
