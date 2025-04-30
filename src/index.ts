@@ -81,19 +81,19 @@ async function buildDataset(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  console.log("Initialise.", "Polling S3 for input files has begun...");
   const pollResults = await Promise.all([
     S3Utils.pollS3File(EMAIL_INPUT_CSV),
     S3Utils.pollS3File(MIGRATION_LOG_INPUT_CSV),
   ]);
 
   // Polling failed if either of the results is false
-  if (pollResults.some((result) => result === false)) {
+  if (pollResults.some((result) => !result)) {
     console.error("Polling failed. Exiting...");
 
-    Notify.sendEmail("631fc88d-c6f9-4251-aaea-dd3b08713d2a", {
-        context: "Polling for input files",
-        message:
-        "Polling for the input files failed. Please check the S3 bucket.",
+    await Notify.sendEmail("631fc88d-c6f9-4251-aaea-dd3b08713d2a", {
+      context: "Polling for input files",
+      message: "Polling for the input files failed. Please check the S3 bucket."
     });
 
     return;
@@ -135,10 +135,11 @@ async function main(): Promise<void> {
   await S3Utils.moveS3ResourceFilesToCompleted();
   console.log("Moved S3 resource files to completed directory.");
 
-  Notify.sendEmail("11ff2de6-9d50-431e-91f7-44f06a261261");
+  // Send success email notification
+  await Notify.sendEmail("11ff2de6-9d50-431e-91f7-44f06a261261");
 
-  // If we've made it here, we have successfully run, start polling again.
-  main();
+  // If we've made it here, we have successfully run, start polling again for updates.
+  await main();
 
   return;
 }
