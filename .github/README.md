@@ -96,9 +96,7 @@ kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/migration_log
 6. Check the processed file in the bucket using head object:
 
 ```bash
-kubectl -n migration-link-exchange-build-dev exec $SPOD -- aws s3 cp s3://$S3_BUCKET/build-output/dataset.csv /tmp/dataset.csv
-kubectl -n migration-link-exchange-build-dev exec $SPOD -- cat /tmp/dataset.csv
-kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/dataset.csv
+kubectl -n migration-link-exchange-build-dev exec $SPOD -- aws s3 ls s3://$S3_BUCKET/build-output/dataset.csv
 
 ```
 
