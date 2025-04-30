@@ -27,6 +27,8 @@ jobs:
           TPL_PATH: "deploy/${{ inputs.environment }}"
           ECR_URL: ${{ inputs.registry }}/${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: "node-${{ github.sha }}"
+          GOV_NOTIFY_API_KEY: ${{ secrets.GOV_NOTIFY_API_KEY }}
+          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
           SERVICE_ACCOUNT_EMAIL: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
           SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.SERVICE_ACCOUNT_PRIVATE_KEY }}
         run: |
