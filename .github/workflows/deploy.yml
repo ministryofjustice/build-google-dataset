@@ -31,6 +31,12 @@ jobs:
           SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.SERVICE_ACCOUNT_PRIVATE_KEY }}
         run: |
           ## - - - - - - - - - - -
+          ## Transform to base64
+          ## - - - - - - - - - - -
+
+          export SERVICE_ACCOUNT_PRIVATE_KEY_BASE64=$(echo -n "$SERVICE_ACCOUNT_PRIVATE_KEY" | base64 -w 0)
+
+          ## - - - - - - - - - - -
           ## Perform find/replace
           ## - - - - - - - - - - -
 
