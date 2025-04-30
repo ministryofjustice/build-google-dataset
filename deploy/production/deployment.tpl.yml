@@ -41,3 +41,6 @@ spec:
                 secretKeyRef:
                   name: s3-bucket-output
                   key: bucket_name
+          envFrom:
+            - secretRef:
+                name: google-client-credentials
