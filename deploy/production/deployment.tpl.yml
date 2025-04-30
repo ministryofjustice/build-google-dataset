@@ -21,6 +21,7 @@ spec:
         app: ${KUBE_NAMESPACE}
     spec:
       terminationGracePeriodSeconds: 35
+      serviceAccountName: ${KUBE_NAMESPACE}-service
       containers:
         - name: node
           image: ${ECR_URL}:${IMAGE_TAG}
