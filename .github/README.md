@@ -91,7 +91,8 @@ kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/user_emails.c
 kubectl -n migration-link-exchange-build-dev exec $SPOD -- rm /tmp/migration_log_input.csv
 ```
 
-5. Check the application logs to see if the files have been processed:
+5. Check the application logs to see if the files have been processed, either wait for 6 minutes or delete the pod to force a restart.
+
 
 6. Check the processed file in the bucket using head object:
 
