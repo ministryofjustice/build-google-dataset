@@ -57,16 +57,16 @@ export class CSVUtils {
 
 		// The header row for a fresh CSV
 		const headerRow = [
-			'Google File ID',
-			'Google File Name',
-			'Google Path',
-			'Google URL',
-			'Google Owner Email',
-			'Google Last Accessed Time',
-			'Google Last Modifying User',
-			'Microsoft URL',
-			'Microsoft Path',
-			'Microsoft FileType'
+			'googleFileId',
+			'googleFileName',
+			'googlePath',
+			'googleUrl',
+			'googleOwnerEmail',
+			'googleLastAccessedTime',
+			'googleLastModifyingUser',
+			'microsoftUrl',
+			'microsoftPath',
+			'microsoftFileType'
 		];
 
 		// Convert fileResults to CSV lines (excluding header).
