@@ -46,9 +46,16 @@ ENTRYPOINT ["ash", "-c", "/home/node/bin/app-install.sh"]
 
 FROM base-node AS build-prod
 
-RUN npm i
-RUN npm run build
+RUN npm ci && \
+    # Run the gulp build script
+    npm run build && \
+    # Remove dev dependencies
+    npm prune --production
+
+# Change the environment to production for runtime.
+ENV NODE_ENV=production
 
 USER 1000
 
-ENTRYPOINT ["ash", "-c", "npm run start"]
+# Execute NodeJS (not NPM script) to handle SIGTERM and SIGINT signals.
+CMD ["node", ".dist/index.js"]

@@ -22,18 +22,27 @@ spec:
     spec:
       terminationGracePeriodSeconds: 35
       serviceAccountName: ${KUBE_NAMESPACE}-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: "RuntimeDefault"
       containers:
         - name: node
           image: ${ECR_URL}:${IMAGE_TAG}
           resources:
             limits:
-              cpu: 500m
-              memory: 2000Mi
+              cpu: 8000m
+              memory: 8000Mi
             requests:
-              cpu: 50m
+              cpu: 1000m
               memory: 1000Mi
           securityContext:
             runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities: 
+              drop: ["ALL"]
           env:
             - name: AWS_REGION
               value: eu-west-2
