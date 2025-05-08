@@ -58,4 +58,4 @@ ENV NODE_ENV=production
 USER 1000
 
 # Execute NodeJS (not NPM script) to handle SIGTERM and SIGINT signals.
-CMD ["node", ".dist/index.js"]
+CMD ["node", "./dist/index.js"]
