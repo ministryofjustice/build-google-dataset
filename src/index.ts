@@ -81,6 +81,8 @@ async function buildDataset(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  console.log("Initialise.", "Polling S3 for input files has begun...");
+
   const pollResults = await Promise.all([
     S3Utils.pollS3File(EMAIL_INPUT_CSV),
     S3Utils.pollS3File(MIGRATION_LOG_INPUT_CSV),
