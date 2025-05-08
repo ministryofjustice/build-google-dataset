@@ -11,6 +11,10 @@
 
 FROM node:23-alpine AS base-node
 
+# Set the environment to development, as we will install
+# npm development dependencies in both child images.
+ENV NODE_ENV=development
+
 COPY --chown=node:node ./ /home/node/
 WORKDIR /home/node/
 
