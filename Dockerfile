@@ -11,6 +11,10 @@
 
 FROM node:23-alpine AS base-node
 
+# Set the environment to development, as we will install
+# npm development dependencies in both child images.
+ENV NODE_ENV=development
+
 COPY --chown=node:node ./ /home/node/
 WORKDIR /home/node/
 
@@ -58,4 +62,4 @@ ENV NODE_ENV=production
 USER 1000
 
 # Execute NodeJS (not NPM script) to handle SIGTERM and SIGINT signals.
-CMD ["node", "./dist/index.js"]
+CMD ["node", "dist/index.js"]
