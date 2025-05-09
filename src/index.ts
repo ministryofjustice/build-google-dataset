@@ -6,7 +6,15 @@ import { S3Utils } from "./s3Utils";
 import { FileResult } from "./types/FileResult";
 import { GoogleAuthService } from "./googleAuthService";
 import { MigrationMapper } from "./migrationMapper";
-import { EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
+import { IS_PROD, EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
+
+const knownErrors = ["The domain administrators have disabled Drive apps."];
+
+const isGaxiosError = (
+  error: any,
+): error is { errors: { message: string }[] } => {
+  return error && typeof error === "object" && error.hasOwnProperty("errors");
+};
 
 async function buildDataset(): Promise<void> {
   const authService = new GoogleAuthService();
@@ -24,15 +32,19 @@ async function buildDataset(): Promise<void> {
     console.time(`Batch ${i / CONCURRENCY + 1} - Fetching Drive files`);
 
     const batchResults = await Promise.all(
-      batchEmails.map(async (email) => {
-        console.time(`Fetching files for ${email}`);
+      batchEmails.map(async (email, batchIndex) => {
+        const emailIndex = i + batchIndex;
+
+        const identifier = IS_PROD ? `email index ${emailIndex}` : email;
+
+        console.time(`Fetching files for ${identifier}`);
 
         const driveService = new GoogleDriveService(
           authService.getJwtForUser(email),
         );
         try {
           const userFiles = await driveService.getDriveFiles();
-          console.timeEnd(`Fetching files for ${email}`);
+          console.timeEnd(`Fetching files for ${identifier}`);
 
           return userFiles.map((file) => {
             const migrationEntry = migrationLogService.getEntry(
@@ -53,7 +65,21 @@ async function buildDataset(): Promise<void> {
             return file;
           });
         } catch (err) {
-          console.error(`Error processing ${email}`, err);
+          let allErrorsAreKnown = false;
+          // Handle known errors
+          if (IS_PROD && isGaxiosError(err)) {
+            allErrorsAreKnown = err.errors.every((error) => {
+              if (knownErrors.includes(error.message)) {
+                console.error(`Error (in known list) for ${identifier}: ${error.message}`);
+                return true;
+              }
+              return false;
+            });
+          }
+          // Handle unknown errors
+          if (!allErrorsAreKnown) {
+            console.error(`Error processing ${identifier}`, err);
+          }
           return [];
         }
       }),
@@ -82,6 +108,7 @@ async function buildDataset(): Promise<void> {
 
 async function main(): Promise<void> {
   console.log("Initialise.", "Polling S3 for input files has begun...");
+
   const pollResults = await Promise.all([
     S3Utils.pollS3File(EMAIL_INPUT_CSV),
     S3Utils.pollS3File(MIGRATION_LOG_INPUT_CSV),
@@ -130,7 +157,7 @@ async function main(): Promise<void> {
   console.log("Removed local resources directory.");
   await fsPromises.rm(`/tmp/build-output`, { recursive: true, force: true });
   console.log("Removed local build-output directory.");
-  
+
   // Move S3 resource files to a completed directory
   await S3Utils.moveS3ResourceFilesToCompleted();
   console.log("Moved S3 resource files to completed directory.");

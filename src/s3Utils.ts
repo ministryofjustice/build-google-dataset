@@ -120,8 +120,8 @@ export class S3Utils {
     return new Promise((resolve, reject) => {
       let timeoutId: string | number | NodeJS.Timeout | null | undefined = null;
       let attempts = 0;
-      let maxAttempts = 10; // 1 hour (adjust to 24 hours once working on dev)
-      const interval = 360000; // 6 minutes
+      let maxAttempts = 120; // 1 hour (adjust to 24 hours once working on dev)
+      const interval = 30000; // 30seconds
 
       const checkFile = async () => {
         try {
