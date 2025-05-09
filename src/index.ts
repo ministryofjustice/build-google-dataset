@@ -6,7 +6,12 @@ import { S3Utils } from "./s3Utils";
 import { FileResult } from "./types/FileResult";
 import { GoogleAuthService } from "./googleAuthService";
 import { MigrationMapper } from "./migrationMapper";
-import { IS_PROD, EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
+import {
+  IS_PROD,
+  EMAIL_INPUT_CSV,
+  MIGRATION_LOG_INPUT_CSV,
+  OUTPUT_CSV,
+} from "./config";
 
 const knownErrors = ["The domain administrators have disabled Drive apps."];
 
@@ -70,7 +75,9 @@ async function buildDataset(): Promise<void> {
           if (IS_PROD && isGaxiosError(err)) {
             allErrorsAreKnown = err.errors.every((error) => {
               if (knownErrors.includes(error.message)) {
-                console.error(`Error (in known list) for ${identifier}: ${error.message}`);
+                console.error(
+                  `Error (in known list) for ${identifier}: ${error.message}`,
+                );
                 return true;
               }
               return false;
@@ -150,7 +157,16 @@ async function main(): Promise<void> {
   await buildDataset();
 
   console.log("S3Utils", "Begin upload process to S3...");
-  await S3Utils.uploadToS3();
+  try {
+    await S3Utils.uploadToS3();
+  } catch (err: any) {
+    console.error("Error uploading to S3:", err);
+    Notify.sendEmail("631fc88d-c6f9-4251-aaea-dd3b08713d2a", {
+      context: "S3 upload process",
+      message: "Uploading to S3 failed. Please check logs for full error.",
+    });
+    return;
+  }
 
   // Remove local files
   await fsPromises.rm("/tmp/resources", { recursive: true, force: true });
