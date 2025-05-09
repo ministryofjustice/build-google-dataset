@@ -2,12 +2,12 @@ import * as fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import { EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
 import {
-  S3Client,
   CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
+  S3Client,
   type S3ClientConfig,
 } from "@aws-sdk/client-s3";
 
@@ -131,6 +131,7 @@ export class S3Utils {
             if (timeoutId) {
               clearTimeout(timeoutId);
             }
+            console.log(`File ${key} was found!.`);
             resolve(true);
           } else if (attempts < maxAttempts) {
             attempts++;
@@ -151,6 +152,10 @@ export class S3Utils {
     });
   }
 
+  /**
+   * Downloads files from S3 and saves them to the local /tmp/resources directory.
+   * The files are downloaded using the S3 client and saved with the same name as in S3.
+   */
   public static async pullResourcesFromS3(): Promise<void> {
     const resourceKeys = [EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV];
 
@@ -188,6 +193,11 @@ export class S3Utils {
     }
   }
 
+  /**
+   * Performed once the dataset is built.
+   * Moves S3 resource files to a completed directory with a timestamp.
+   * The original files are deleted after copying.
+   */
   public static async moveS3ResourceFilesToCompleted(): Promise<void> {
     const s3Client = new S3Client(this.getS3ClientParams());
     const resourceKeys = [EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV];
