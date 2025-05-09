@@ -35,7 +35,7 @@ async function buildDataset(): Promise<void> {
       batchEmails.map(async (email, batchIndex) => {
         const emailIndex = i + batchIndex;
 
-        const identifier = IS_PROD ? `email row ${emailIndex}` : email;
+        const identifier = IS_PROD ? `email index ${emailIndex}` : email;
 
         console.time(`Fetching files for ${identifier}`);
 
