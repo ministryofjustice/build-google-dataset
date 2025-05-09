@@ -139,7 +139,7 @@ async function main(): Promise<void> {
   await Notify.sendEmail("11ff2de6-9d50-431e-91f7-44f06a261261");
 
   // If we've made it here, we have successfully run, start polling again for updates.
-  await main();
+  main();
 
   return;
 }
