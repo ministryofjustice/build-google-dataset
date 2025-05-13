@@ -10,7 +10,7 @@ const router = express.Router();
 import { S3Utils } from "./s3Utils";
 
 router.get("/", (req: Request, res: Response) => {
-  // Basic heml form for submitting a file to /uploads
+  // Basic html form for submitting a file to /uploads
   res.send(`
     <form action="/upload" method="post" enctype="multipart/form-data">
       <input type="file" name="file" />
