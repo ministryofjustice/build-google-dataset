@@ -13,17 +13,22 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/multer": "^1.4.12",
     "@types/node": "^22.13.10",
     "typescript": "^5.8.2"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.797.0",
+    "@aws-sdk/lib-storage": "^3.808.0",
     "@jgoz/esbuild-plugin-typecheck": "^4.0.3",
     "chokidar": "^4.0.3",
     "concurrently": "^9.1.2",
     "esbuild": "^0.25.1",
+    "express": "^5.1.0",
     "glob": "^11.0.1",
     "googleapis": "^146.0.0",
+    "multer": "^1.4.5-lts.2",
     "notifications-node-client": "^8.2.1",
     "ts-node": "^10.9.2"
   }

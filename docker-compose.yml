@@ -13,6 +13,8 @@ services:
     volumes:
       - node_modules:/home/node/node_modules
       - ./build-output/:/home/node/build-output
+    ports:
+      - "3000:3000" # The app.
 
   minio:
     container_name: google-dataset-minio

@@ -1,4 +1,5 @@
 import fsPromises from "node:fs/promises";
+import express, { type Request, type Response } from "express";
 import { GoogleDriveService } from "./googleDriveService";
 import { CSVUtils } from "./csvUtils";
 import { Notify } from "./notify";
@@ -12,6 +13,7 @@ import {
   MIGRATION_LOG_INPUT_CSV,
   OUTPUT_CSV,
 } from "./config";
+import { router } from "./upload.router";
 
 const knownErrors = ["The domain administrators have disabled Drive apps."];
 
@@ -127,7 +129,8 @@ async function main(): Promise<void> {
 
     await Notify.sendEmail("631fc88d-c6f9-4251-aaea-dd3b08713d2a", {
       context: "Polling for input files",
-      message: "Polling for the input files failed. Please check the S3 bucket."
+      message:
+        "Polling for the input files failed. Please check the S3 bucket.",
     });
 
     return;
@@ -187,6 +190,23 @@ async function main(): Promise<void> {
   return;
 }
 
+// Server
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).send("OK");
+});
+
+app.use("/", router);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Start the main function
 main().catch((err) => {
   console.error("Script error:", err);
 });

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-service
+  namespace: migration-link-exchange-build-prod
+  labels:
+    app: migration-link-exchange-build-prod
+spec:
+  ports:
+  - port: 3000
+    name: http
+  selector:
+    app: migration-link-exchange-build-prod
