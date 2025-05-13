@@ -205,7 +205,7 @@ app.use(express.json());
 // Redirect all HTTP traffic to HTTPS
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (IS_PROD && !req.secure) {
-    res.redirect(`https://${req.headers.host}${req.url}`);
+    res.redirect(`https://${process.env.BASE_HOST}`);
     return;
   }
   next();

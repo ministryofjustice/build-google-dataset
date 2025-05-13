@@ -1,3 +1,5 @@
+import crypto from 'node:crypto'
+
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload, Progress } from "@aws-sdk/lib-storage";
 import express, { type Request, type Response } from "express";
@@ -14,6 +16,7 @@ router.get("/", (req: Request, res: Response) => {
   res.send(`
     <form action="/upload" method="post" enctype="multipart/form-data">
       <input type="file" name="file" />
+      <input type="text" name="auth-token" placeholder="Auth Token" />
       <button type="submit">Upload</button>
     </form>
   `);
@@ -23,6 +26,25 @@ router.post(
   "/upload",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
+    if(!process.env.AUTH_TOKEN_HASH?.length) {
+      res.status(500).send("Auth token hash not set.");
+      return;
+    }
+
+    // Get the auth-token from the request body
+    const authToken = req.body["auth-token"];
+
+    const authTokenHash = crypto
+      .createHash("sha256")
+      .update(authToken)
+      .digest("hex");
+
+    // Check if the auth-token is valid
+    if (authTokenHash !== process.env.AUTH_TOKEN_HASH) {
+      res.status(403).send("Invalid auth token.");
+      return;
+    }
+
     if (!req.file) {
       res.status(400).send("No file uploaded.");
       return;
