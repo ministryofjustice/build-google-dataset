@@ -6,9 +6,6 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/set-identifier: migration-link-exchange-build-dev-ingress-migration-link-exchange-build-dev-green
     external-dns.alpha.kubernetes.io/aws-weight: "100"
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: basic-auth-secret
-    nginx.ingress.kubernetes.io/auth-realm: 'Development User | Authentication Required'
     nginx.ingress.kubernetes.io/proxy-body-size: "3000m"
     nginx.ingress.kubernetes.io/server-snippet: |
       location = /health {
