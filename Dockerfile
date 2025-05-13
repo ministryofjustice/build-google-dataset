@@ -62,4 +62,5 @@ ENV NODE_ENV=production
 USER 1000
 
 # Execute NodeJS (not NPM script) to handle SIGTERM and SIGINT signals.
-CMD ["node", "dist/index.js"]
+# Set memory limit to 3GiB
+CMD ["node", "--max-old-space-size=3072", "dist/index.js"]
