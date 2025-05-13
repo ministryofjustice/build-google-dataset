@@ -33,10 +33,10 @@ spec:
           image: ${ECR_URL}:${IMAGE_TAG}
           resources:
             limits:
-              cpu: 500m
-              memory: 2000Mi
+              cpu: 8000m
+              memory: 8000Mi
             requests:
-              cpu: 50m
+              cpu: 1000m
               memory: 1000Mi
           securityContext:
             runAsUser: 1000
