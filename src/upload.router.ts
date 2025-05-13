@@ -26,6 +26,11 @@ router.post(
   "/upload",
   upload.single("file"),
   async (req: Request, res: Response): Promise<void> => {
+    if(!process.env.AUTH_TOKEN_HASH?.length) {
+      res.status(500).send("Auth token hash not set.");
+      return;
+    }
+
     // Get the auth-token from the request body
     const authToken = req.body["auth-token"];
 
@@ -33,13 +38,6 @@ router.post(
       .createHash("sha256")
       .update(authToken)
       .digest("hex");
-
-    console.log("Auth token hash: ", authTokenHash);
-
-    if(!process.env.AUTH_TOKEN_HASH?.length) {
-      res.status(500).send("Auth token hash not set.");
-      return;
-    }
 
     // Check if the auth-token is valid
     if (authTokenHash !== process.env.AUTH_TOKEN_HASH) {
