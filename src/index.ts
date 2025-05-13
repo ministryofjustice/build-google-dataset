@@ -1,5 +1,9 @@
 import fsPromises from "node:fs/promises";
-import express, { type Request, type Response } from "express";
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import { GoogleDriveService } from "./googleDriveService";
 import { CSVUtils } from "./csvUtils";
 import { Notify } from "./notify";
@@ -194,7 +198,18 @@ async function main(): Promise<void> {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set("trust proxy", true);
+
 app.use(express.json());
+
+// Redirect all HTTP traffic to HTTPS
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (IS_PROD && !req.secure) {
+    res.redirect(`https://${req.headers.host}${req.url}`);
+    return;
+  }
+  next();
+});
 
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).send("OK");
