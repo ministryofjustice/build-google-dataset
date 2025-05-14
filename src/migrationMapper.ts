@@ -8,6 +8,8 @@ interface MigrationEntry {
 
 export class MigrationMapper {
   private readonly map: Record<string, MigrationEntry> = {};
+  
+  public readonly emails: string[] = [];
 
   // An object of characters.
   // Keys are the characters that the Google API returns,
@@ -26,6 +28,9 @@ export class MigrationMapper {
           "",
         ),
       };
+      if (!this.emails.includes(entry.SourcePath)) {
+        this.emails.push(entry.SourcePath);
+      }
     }
   }
 

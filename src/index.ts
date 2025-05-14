@@ -13,7 +13,6 @@ import { GoogleAuthService } from "./googleAuthService";
 import { MigrationMapper } from "./migrationMapper";
 import {
   IS_PROD,
-  EMAIL_INPUT_CSV,
   MIGRATION_LOG_INPUT_CSV,
   OUTPUT_CSV,
 } from "./config";
@@ -29,9 +28,9 @@ const isGaxiosError = (
 
 async function buildDataset(): Promise<void> {
   const authService = new GoogleAuthService();
-  const emails = CSVUtils.readEmailAddresses();
   const migrationLog = CSVUtils.readMigrationLog();
   const migrationLogService = new MigrationMapper(migrationLog as any);
+  const emails = migrationLogService.emails;
 
   const CHUNK_SIZE = 10_000;
   const CONCURRENCY = 25; // Process 5 users concurrently
@@ -120,15 +119,12 @@ async function buildDataset(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log("Initialise.", "Polling S3 for input files has begun...");
+  console.log("Initialise.", "Polling S3 for input file has begun...");
 
-  const pollResults = await Promise.all([
-    S3Utils.pollS3File(EMAIL_INPUT_CSV),
-    S3Utils.pollS3File(MIGRATION_LOG_INPUT_CSV),
-  ]);
+  const pollResult = await S3Utils.pollS3File(MIGRATION_LOG_INPUT_CSV);
 
   // Polling failed if either of the results is false
-  if (pollResults.some((result) => !result)) {
+  if (!pollResult) {
     console.error("Polling failed. Exiting...");
 
     await Notify.sendEmail("631fc88d-c6f9-4251-aaea-dd3b08713d2a", {
