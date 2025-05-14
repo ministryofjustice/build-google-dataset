@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import fsPromises from "node:fs/promises";
-import { EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
+import { MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
@@ -157,7 +157,7 @@ export class S3Utils {
    * The files are downloaded using the S3 client and saved with the same name as in S3.
    */
   public static async pullResourcesFromS3(): Promise<void> {
-    const resourceKeys = [EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV];
+    const resourceKeys = [MIGRATION_LOG_INPUT_CSV];
 
     const s3Client = new S3Client(this.getS3ClientParams());
   
@@ -200,7 +200,7 @@ export class S3Utils {
    */
   public static async moveS3ResourceFilesToCompleted(): Promise<void> {
     const s3Client = new S3Client(this.getS3ClientParams());
-    const resourceKeys = [EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV];
+    const resourceKeys = [MIGRATION_LOG_INPUT_CSV];
 
     const timestamp = new Date().toISOString().replace(/:/g, "-");
     const completedDir = `completed/${timestamp}/`;

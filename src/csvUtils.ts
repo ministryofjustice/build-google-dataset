@@ -1,19 +1,8 @@
 import * as fs from 'fs';
-import { EMAIL_INPUT_CSV, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from './config';
+import { MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from './config';
 import { FileResult } from "./types/FileResult";
 
 export class CSVUtils {
-	public static readEmailAddresses(): string[] {
-		const csvData = fs.readFileSync(`/tmp/${EMAIL_INPUT_CSV}`, 'utf8').trim();
-		const lines = csvData.split('\n');
-		const startIndex = lines[0].toLowerCase().includes('email') ? 1 : 0;
-
-		return lines
-			.slice(startIndex)
-			.map(line => line.trim())
-			.filter(line => line.length > 0);
-	}
-
 	public static readMigrationLog(
 		selectedFields = ['SourcePath', 'FullPath', 'DestinationLocation', 'DestinationType']
 	): Record<string, string>[] {
