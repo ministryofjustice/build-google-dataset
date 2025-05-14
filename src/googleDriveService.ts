@@ -62,7 +62,7 @@ export class GoogleDriveService {
 
 	private async fetchAllFiles(pageToken?: string): Promise<drive_v3.Schema$File[]> {
 		const response = await this.drive.files.list({
-			q: "'me' in owners",
+			q: "'me' in writers or sharedWithMe",
 			spaces: 'drive',
 			fields:
 				'nextPageToken, files(id, name, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime)',
