@@ -13,7 +13,7 @@ export class MigrationMapper {
   // Keys are the characters that the Google API returns,
   // Values are what the migration tool returns.
   private readonly charSubstitutes: { [key: string]: string } = {
-    "´": "?",
+    "’": "?",
   };
 
   constructor(entries: MigrationEntry[]) {
