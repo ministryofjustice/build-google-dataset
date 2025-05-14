@@ -163,6 +163,16 @@ async function main(): Promise<void> {
   console.log("Running build dataset...");
   await buildDataset();
 
+  // If there is no file at `/tmp/build-output/dataset.csv` then wait 5 mins
+  if (!(await fsPromises.stat(`/tmp/${OUTPUT_CSV}`).catch(() => false))) {
+    console.log(
+      "No dataset.csv file found. Waiting 5 minutes before retrying...",
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+    main();
+    return;
+  }
+
   console.log("S3Utils", "Begin upload process to S3...");
   try {
     await S3Utils.uploadToS3();
