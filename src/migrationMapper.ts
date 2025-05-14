@@ -8,8 +8,15 @@ interface MigrationEntry {
 
 export class MigrationMapper {
   private readonly map: Record<string, MigrationEntry> = {};
-
+  
   public readonly emails: string[] = [];
+
+  // An object of characters.
+  // Keys are the characters that the Google API returns,
+  // Values are what the migration tool returns.
+  private readonly charSubstitutes: { [key: string]: string } = {
+    "’": "?",
+  };
 
   constructor(entries: MigrationEntry[]) {
     for (const entry of entries) {
@@ -27,8 +34,18 @@ export class MigrationMapper {
     }
   }
 
+  private replaceAll(
+    haystack: string,
+    replaceObject: { [key: string]: string },
+  ): string {
+    return Object.keys(replaceObject).reduce(
+      (f, s, i) => `${f}`.replace(new RegExp(s, "ig"), replaceObject[s]),
+      haystack,
+    );
+  }
+
   private createKey(sourcePath: string, fullPath: string): string {
-    return `${sourcePath}::${fullPath}`;
+    return `${sourcePath}::${this.replaceAll(fullPath, this.charSubstitutes)}`;
   }
 
   public getEntry(sourcePath: string, fullPath: string): MigrationEntry {
