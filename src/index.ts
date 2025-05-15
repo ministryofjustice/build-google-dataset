@@ -11,11 +11,7 @@ import { S3Utils } from "./s3Utils";
 import { FileResult } from "./types/FileResult";
 import { GoogleAuthService } from "./googleAuthService";
 import { MigrationMapper } from "./migrationMapper";
-import {
-  IS_PROD,
-  MIGRATION_LOG_INPUT_CSV,
-  OUTPUT_CSV,
-} from "./config";
+import { IS_PROD, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
 import { router } from "./upload.router";
 
 const knownErrors = ["The domain administrators have disabled Drive apps."];
@@ -36,66 +32,109 @@ async function buildDataset(): Promise<void> {
   const CONCURRENCY = 25; // Process 5 users concurrently
   let accumulatedFiles: FileResult[] = [];
 
+  /**
+   * addMigrationPropertiesToUsersFile
+   *
+   * This function accepts a users email and the file object from the google API.
+   * It will for a matching entry in the migration log, and  if found,
+   * add additional properties to the file object.
+   */
+  function addMigrationPropertiesToUsersFile(
+    email: string,
+    file: FileResult,
+  ): FileResult {
+    const migrationEntry = migrationLogService.getEntry(email, file.googlePath);
+    if (migrationEntry) {
+      file.destinationLocation = migrationEntry.DestinationLocation;
+      file.destinationType = migrationEntry.DestinationType;
+      file.microsoftPath = migrationEntry.MicrosoftPath;
+    }
+
+    return file;
+  }
+
+  /**
+   * getMigratedFilesByEmail
+   * 
+   * Firstly get all files for a Google email
+   * Then, loop over these files and populate the data with:
+   * - destinationLocation
+   * - destinationType
+   * - microsoftPath
+   */
+
+  async function getMigratedFilesByEmail(
+    email: string,
+    emailIndex: number,
+  ): Promise<FileResult[]> {
+    const identifier = IS_PROD ? `email index ${emailIndex}` : email;
+
+    console.time(`Fetching files for ${identifier}`);
+
+    const driveService = new GoogleDriveService(
+      authService.getJwtForUser(email),
+    );
+    try {
+      const userFiles = await driveService.getDriveFiles();
+      console.timeEnd(`Fetching files for ${identifier}`);
+
+      const userFilesWithMigrationProperties = [];
+
+      for (const file of userFiles) {
+        userFilesWithMigrationProperties.push(
+          addMigrationPropertiesToUsersFile(email, file),
+        );
+      }
+
+      return userFilesWithMigrationProperties;
+    } catch (err) {
+      let allErrorsAreKnown = false;
+      // Handle known errors
+      if (IS_PROD && isGaxiosError(err)) {
+        allErrorsAreKnown = err.errors.every((error) => {
+          if (knownErrors.includes(error.message)) {
+            console.error(
+              `Error (in known list) for ${identifier}: ${error.message}`,
+            );
+            return true;
+          }
+          return false;
+        });
+      }
+      // Handle unknown errors
+      if (!allErrorsAreKnown) {
+        console.error(`Error processing ${identifier}`, err);
+      }
+      return [];
+    }
+  }
+
+  /**
+   * The outer loop.
+   */
   for (let i = 0; i < emails.length; i += CONCURRENCY) {
+    // This is batch of email addresses.
     const batchEmails = emails.slice(i, i + CONCURRENCY);
 
     console.time(`Batch ${i / CONCURRENCY + 1} - Fetching Drive files`);
 
-    const batchResults = await Promise.all(
-      batchEmails.map(async (email, batchIndex) => {
-        const emailIndex = i + batchIndex;
+    // Set up an array of promises, we will wait for them all later.
+    const batchResultsPromises: Promise<FileResult[]>[] = [];
 
-        const identifier = IS_PROD ? `email index ${emailIndex}` : email;
+    // Keep track of the index for the inner loop.
+    let batchIndex = 0;
 
-        console.time(`Fetching files for ${identifier}`);
+    /**
+     * The inner loop - over individual email addresses.
+     */
+    for (const email of batchEmails) {
+      // email index, is the index in the context of all email addresses, used for logging.
+      const emailIndex = i + batchIndex;
+      batchResultsPromises.push(getMigratedFilesByEmail(email, emailIndex));
+      batchIndex++;
+    }
 
-        const driveService = new GoogleDriveService(
-          authService.getJwtForUser(email),
-        );
-        try {
-          const userFiles = await driveService.getDriveFiles();
-          console.timeEnd(`Fetching files for ${identifier}`);
-
-          return userFiles.map((file) => {
-            const migrationEntry = migrationLogService.getEntry(
-              email,
-              file.googlePath,
-            );
-            if (migrationEntry) {
-              const { DestinationLocation, DestinationType, MicrosoftPath } =
-                migrationEntry;
-              return {
-                ...file,
-                destinationLocation: DestinationLocation,
-                destinationType: DestinationType,
-                microsoftPath: MicrosoftPath,
-              };
-            }
-
-            return file;
-          });
-        } catch (err) {
-          let allErrorsAreKnown = false;
-          // Handle known errors
-          if (IS_PROD && isGaxiosError(err)) {
-            allErrorsAreKnown = err.errors.every((error) => {
-              if (knownErrors.includes(error.message)) {
-                console.error(
-                  `Error (in known list) for ${identifier}: ${error.message}`,
-                );
-                return true;
-              }
-              return false;
-            });
-          }
-          // Handle unknown errors
-          if (!allErrorsAreKnown) {
-            console.error(`Error processing ${identifier}`, err);
-          }
-          return [];
-        }
-      }),
-    );
+    const batchResults = await Promise.all(batchResultsPromises);
 
     console.timeEnd(`Batch ${i / CONCURRENCY + 1} - Fetching Drive files`);
 
