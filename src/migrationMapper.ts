@@ -4,11 +4,13 @@ interface MigrationEntry {
   MicrosoftPath: string;
   DestinationLocation: string;
   DestinationType: string;
+  _getCount: number;
+  _csvLineNumber: number;
 }
 
 export class MigrationMapper {
   private readonly map: Record<string, MigrationEntry> = {};
-  
+
   public readonly emails: string[] = [];
 
   // An object of characters.
@@ -19,6 +21,7 @@ export class MigrationMapper {
   };
 
   constructor(entries: MigrationEntry[]) {
+    let csvLineNumber = 2;
     for (const entry of entries) {
       const key = this.createKey(entry.SourcePath, entry.FullPath);
       this.map[key] = {
@@ -27,10 +30,13 @@ export class MigrationMapper {
           /^(?!https:\/\/forms\.office\.com\/)https:\/\/[^\/]+/,
           "",
         ),
+        _getCount: 0,
+        _csvLineNumber: csvLineNumber,
       };
       if (!this.emails.includes(entry.SourcePath)) {
         this.emails.push(entry.SourcePath);
       }
+      csvLineNumber++;
     }
   }
 
@@ -50,6 +56,19 @@ export class MigrationMapper {
 
   public getEntry(sourcePath: string, fullPath: string): MigrationEntry {
     const key = this.createKey(sourcePath, fullPath);
+    this.map[key] && this.map[key]._getCount++;
     return this.map[key];
+  }
+
+  public getUnprocessedLogEntries() {
+    const migrationLogIndexes = [];
+    let loopIndex = 0;
+    for (const entry of Object.values(this.map)) {
+      if (!entry._getCount) {
+        migrationLogIndexes.push(entry._csvLineNumber);
+      }
+      loopIndex++;
+    }
+    return migrationLogIndexes;
   }
 }
