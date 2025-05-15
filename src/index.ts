@@ -29,9 +29,7 @@ async function buildDataset(): Promise<void> {
   const migrationLogService = new MigrationMapper(migrationLog as any);
   const emails = migrationLogService.emails;
 
-  const CHUNK_SIZE = 10_000;
-  const CONCURRENCY = 25; // Process 5 users concurrently
-  let accumulatedFiles: FileResult[] = [];
+  const CONCURRENCY = 25; // Process 25 users concurrently
 
   /**
    * addMigrationPropertiesToUsersFile
@@ -120,6 +118,15 @@ async function buildDataset(): Promise<void> {
 
       return;
     });
+
+  const unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
+
+  // A 2 in this line number 2 in the CSV.
+  // Because the CSV has a header row, 2 is the first row of data.
+  console.log(
+    "unprocessedLogEntries (csv line numbers)",
+    unprocessedLogEntries,
+  );
 }
 
 async function main(): Promise<void> {
