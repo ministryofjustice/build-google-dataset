@@ -4,6 +4,7 @@ import express, {
   type Response,
   type NextFunction,
 } from "express";
+import { PromisePool } from "@supercharge/promise-pool";
 import { GoogleDriveService } from "./googleDriveService";
 import { CSVUtils } from "./csvUtils";
 import { Notify } from "./notify";
@@ -55,7 +56,7 @@ async function buildDataset(): Promise<void> {
 
   /**
    * getMigratedFilesByEmail
-   * 
+   *
    * Firstly get all files for a Google email
    * Then, loop over these files and populate the data with:
    * - destinationLocation
@@ -69,6 +70,7 @@ async function buildDataset(): Promise<void> {
   ): Promise<FileResult[]> {
     const identifier = IS_PROD ? `email index ${emailIndex}` : email;
 
+    console.log(`Fetching files for ${identifier}`);
     console.time(`Fetching files for ${identifier}`);
 
     const driveService = new GoogleDriveService(
@@ -109,52 +111,15 @@ async function buildDataset(): Promise<void> {
     }
   }
 
-  /**
-   * The outer loop.
-   */
-  for (let i = 0; i < emails.length; i += CONCURRENCY) {
-    // This is batch of email addresses.
-    const batchEmails = emails.slice(i, i + CONCURRENCY);
+  await PromisePool.withConcurrency(CONCURRENCY)
+    .for(emails)
+    .process(async (email: string, index: number) => {
+      const files = await getMigratedFilesByEmail(email, index);
 
-    console.time(`Batch ${i / CONCURRENCY + 1} - Fetching Drive files`);
+      CSVUtils.writeOutputCsv(files, { append: true });
 
-    // Set up an array of promises, we will wait for them all later.
-    const batchResultsPromises: Promise<FileResult[]>[] = [];
-
-    // Keep track of the index for the inner loop.
-    let batchIndex = 0;
-
-    /**
-     * The inner loop - over individual email addresses.
-     */
-    for (const email of batchEmails) {
-      // email index, is the index in the context of all email addresses, used for logging.
-      const emailIndex = i + batchIndex;
-      batchResultsPromises.push(getMigratedFilesByEmail(email, emailIndex));
-      batchIndex++;
-    }
-
-    const batchResults = await Promise.all(batchResultsPromises);
-
-    console.timeEnd(`Batch ${i / CONCURRENCY + 1} - Fetching Drive files`);
-
-    console.time(`Batch ${i / CONCURRENCY + 1} - Data Processing`);
-    // Flatten and add the entire batch at once
-    accumulatedFiles.push(...batchResults.flat());
-
-    // Write in large chunks instead of file-by-file
-    if (accumulatedFiles.length >= CHUNK_SIZE) {
-      CSVUtils.writeOutputCsv(accumulatedFiles, { append: true });
-      accumulatedFiles.length = 0; // Clear the array
-    }
-
-    console.timeEnd(`Batch ${i / CONCURRENCY + 1} - Data Processing`);
-  }
-
-  // Write any remaining files after processing all users
-  if (accumulatedFiles.length > 0) {
-    CSVUtils.writeOutputCsv(accumulatedFiles, { append: true });
-  }
+      return;
+    });
 }
 
 async function main(): Promise<void> {
