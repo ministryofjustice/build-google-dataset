@@ -55,6 +55,8 @@ spec:
               value: migration-link-exchange-build-prod.apps.live.cloud-platform.service.justice.gov.uk
             - name: MIGRATION_LOG_INPUT_CSV
               value: resources/migration_log_input.csv
+            - name: GOOGLE_API_CONCURRENCY
+              value: "250"
           envFrom:
             - secretRef:
                 name: ${KUBE_NAMESPACE}-secrets
