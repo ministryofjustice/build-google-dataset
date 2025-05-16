@@ -145,10 +145,12 @@ async function buildDataset(): Promise<DatasetSummary> {
 
   // A 2 in this line number 2 in the CSV.
   // Because the CSV has a header row, 2 is the first row of data.
-  console.log(
-    "unprocessedLogEntries (csv line numbers)",
-    unprocessedLogEntries,
-  );
+  if(unprocessedLogEntries.length) {
+    console.log(
+      "unprocessedLogEntries (csv line numbers)",
+      unprocessedLogEntries.join(', '),
+    );
+  }
 
   // Lookup aggregates, key is lookup count, and value is number of rows.
   // Zero here, means a row in the migration log was not processed
