@@ -25,7 +25,9 @@ export class MigrationMapper {
 
   public maxGetCount: number = 0;
 
-  private readonly rootDestinationFolder: string = IS_PROD ? '/Documents/GW' : '/Documents/Google Migration';
+  private readonly rootDestinationFolder: string = IS_PROD
+    ? "/Documents/GW"
+    : "/Documents/Google Migration";
 
   // An object of characters.
   // Keys are the characters that the Google API returns,
@@ -47,7 +49,10 @@ export class MigrationMapper {
       if (
         !["MicrosoftForm", "file", "folder"].includes(entry.DestinationType)
       ) {
-        console.error("Unknown destination type. Add it to the codebase", entry.DestinationType);
+        console.error(
+          "Unknown destination type. Add it to the codebase",
+          entry.DestinationType,
+        );
       }
 
       if (
@@ -110,26 +115,48 @@ export class MigrationMapper {
     fileType: DestinationType,
     fullPath: string,
     fileName: string,
-  ): MigrationEntry {
-    const key = this.createKey(sourcePath, fileType, fullPath);
-    this.map[key] && this.map[key]._getCount++;
-    
-    if (this.map[key] && this.map[key]?._getCount > this.maxGetCount) {
-      this.maxGetCount = this.map[key]._getCount;
+  ): MigrationEntry | undefined {
+    let returnedEntry: MigrationEntry | undefined;
+    let loopIndex = 0;
+
+    while (!returnedEntry && loopIndex < 1000) {
+      const key = this.createKey(
+        sourcePath,
+        fileType,
+        this.addNumberToFileName(fullPath, loopIndex),
+      );
+
+      if (!this.map[key]) {
+        break;
+      }
+
+      if (this.map[key]?._getCount === 0) {
+        this.map[key]._getCount++;
+        returnedEntry = this.map[key];
+      }
+
+      loopIndex++;
     }
 
-    if (this.map[key]) {
-      return this.map[key];
+    if (returnedEntry) {
+      return returnedEntry;
     }
 
     // Let's have a second try to get the entry, if the file name contains a /
     // replace it with an underscore.
-    if (fileName.includes('/')) {
+    if (fileName.includes("/")) {
       const normalisedFileName = fileName.replace(/\//g, "_");
       const normalisedFullPath = fullPath.replace(fileName, normalisedFileName);
-      const normalisedKey = this.createKey(sourcePath, fileType, normalisedFullPath);
+      const normalisedKey = this.createKey(
+        sourcePath,
+        fileType,
+        normalisedFullPath,
+      );
       this.map[normalisedKey] && this.map[normalisedKey]._getCount++;
-      if (this.map[normalisedKey] && this.map[normalisedKey]?._getCount > this.maxGetCount) {
+      if (
+        this.map[normalisedKey] &&
+        this.map[normalisedKey]?._getCount > this.maxGetCount
+      ) {
         this.maxGetCount = this.map[normalisedKey]._getCount;
       }
       if (this.map[normalisedKey]) {
@@ -137,11 +164,11 @@ export class MigrationMapper {
       }
     }
 
-    return this.map[key];
+    return undefined;
   }
 
   public entryIsLikelyRootFolder(entry: MigrationEntry): boolean {
-    if(entry.DestinationType !== "folder") {
+    if (entry.DestinationType !== "folder") {
       return false;
     }
     return entry.DestinationLocation.endsWith(this.rootDestinationFolder);
@@ -173,5 +200,15 @@ export class MigrationMapper {
       loopIndex++;
     }
     return aggregates;
+  }
+
+  private addNumberToFileName(fileName: string, number: number): string {
+    if (number === 0) {
+      return fileName;
+    }
+    const fileNameParts = fileName.split(".");
+    const fileExtension = fileNameParts.pop();
+    const fileNameWithoutExtension = fileNameParts.join(".");
+    return `${fileNameWithoutExtension} (${number}).${fileExtension}`;
   }
 }
