@@ -12,13 +12,15 @@ export class CSVUtils {
       "DestinationType",
     ],
   ): Promise<Record<string, string>[]> {
-    return new Promise<Record<string, string>[]>((resolve, reject) => {
+    return new Promise<Record<string, string>[]>((resolve) => {
       const results: Record<string, string>[] = [];
       parseFile(`/tmp/${MIGRATION_LOG_INPUT_CSV}`, {
         headers: true,
         ignoreEmpty: true,
+		trim: true,
+		// encoding: "utf8", // Default - may need to be updated.
       })
-        .on("error", (error) => console.error(error))
+        .on("error", (error: any) => console.error('Error in readMigrationLog', error))
         .on("data", (row: Record<string, string>) => {
           console.log(row);
           const filteredRow: Record<string, string> = {};
@@ -29,7 +31,7 @@ export class CSVUtils {
           });
           results.push(filteredRow);
         })
-        .on("end", (rowCount: number) => resolve(results));
+        .on("end", () => resolve(results));
     });
   }
 
