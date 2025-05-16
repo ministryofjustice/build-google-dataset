@@ -17,19 +17,35 @@ import { router } from "./upload.router";
 
 const knownErrors = ["The domain administrators have disabled Drive apps."];
 
+type DatasetSummary = {
+  processedCount: number;
+  csvEntryCount: number;
+  csvCollisionCount: number;
+  mapCount: number;
+  lookupAggregates: { [lookupCount: number]: number };
+};
+
 const isGaxiosError = (
   error: any,
 ): error is { errors: { message: string }[] } => {
   return error && typeof error === "object" && error.hasOwnProperty("errors");
 };
 
-async function buildDataset(): Promise<void> {
+async function buildDataset(): Promise<DatasetSummary> {
   const authService = new GoogleAuthService();
   const migrationLog = CSVUtils.readMigrationLog();
   const migrationLogService = new MigrationMapper(migrationLog as any);
   const emails = migrationLogService.emails;
 
   const CONCURRENCY = 25; // Process 25 users concurrently
+
+  const summary: DatasetSummary = {
+    processedCount: 0,
+    csvEntryCount: migrationLogService.csvEntryCount,
+    csvCollisionCount: migrationLogService.csvCollisionCount,
+    mapCount: migrationLogService.mapCount,
+    lookupAggregates: {},
+  };
 
   /**
    * addMigrationPropertiesToUsersFile
@@ -116,6 +132,8 @@ async function buildDataset(): Promise<void> {
 
       CSVUtils.writeOutputCsv(files, { append: true });
 
+      summary.processedCount += files.length;
+
       return;
     });
 
@@ -127,6 +145,12 @@ async function buildDataset(): Promise<void> {
     "unprocessedLogEntries (csv line numbers)",
     unprocessedLogEntries,
   );
+
+  // Lookup aggregates, key is lookup count, and value is number of rows.
+  // Zero here, means a row in the migration log was not processed
+  summary.lookupAggregates = migrationLogService.getProcessedAggregates();
+
+  return summary;
 }
 
 async function main(): Promise<void> {
@@ -168,7 +192,9 @@ async function main(): Promise<void> {
   console.log("Created /tmp/build-output directory.");
 
   console.log("Running build dataset...");
-  await buildDataset();
+  const datasetSummary = await buildDataset();
+
+  console.log("Dataset summary", datasetSummary);
 
   // If there is no file at `/tmp/build-output/dataset.csv` then wait 5 mins
   if (!(await fsPromises.stat(`/tmp/${OUTPUT_CSV}`).catch(() => false))) {
