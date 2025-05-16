@@ -81,8 +81,9 @@ export class GoogleDriveService {
       q: "'me' in writers or sharedWithMe",
       spaces: "drive",
       fields:
-        "nextPageToken, files(id, name, mimeType, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime)",
+        "nextPageToken, files(id, name, mimeType, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime, createdTime)",
       pageToken,
+      orderBy: "createdTime", // Important for working out which files should match renames like (1), (2), etc.
     });
     const files = response.data.files ?? [];
 

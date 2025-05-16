@@ -65,7 +65,7 @@ async function buildDataset(): Promise<DatasetSummary> {
       email,
       file.googleType,
       file.googlePath,
-      file.name
+      file.name,
     );
     if (migrationEntry) {
       file.destinationLocation = migrationEntry.DestinationLocation;
