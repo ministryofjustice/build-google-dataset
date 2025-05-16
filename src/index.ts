@@ -61,7 +61,11 @@ async function buildDataset(): Promise<DatasetSummary> {
     email: string,
     file: FileResult,
   ): FileResult {
-    const migrationEntry = migrationLogService.getEntry(email, file.googlePath);
+    const migrationEntry = migrationLogService.getEntry(
+      email,
+      file.googleType,
+      file.googlePath,
+    );
     if (migrationEntry) {
       file.destinationLocation = migrationEntry.DestinationLocation;
       file.destinationType = migrationEntry.DestinationType;

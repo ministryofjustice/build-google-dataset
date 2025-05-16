@@ -224,6 +224,10 @@ export class S3Utils {
 
     console.log(`Copied ${key} to ${destination}`);
 
+    if (key.startsWith("completed")) {
+      return;
+    }
+
     // Delete the original file
     const deleteParams = {
       Bucket: process.env.AWS_S3_BUCKET,
