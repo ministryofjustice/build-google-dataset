@@ -1,3 +1,5 @@
+export type DestinationType = "MicrosoftForm" | "file" | "folder";
+
 interface MigrationEntry {
   SourcePath: string;
   FullPath: string;
@@ -32,7 +34,17 @@ export class MigrationMapper {
     let csvLineNumber = 2;
 
     for (const entry of entries) {
-      const key = this.createKey(entry.SourcePath, entry.FullPath);
+      const key = this.createKey(
+        entry.SourcePath,
+        entry.DestinationType as DestinationType,
+        entry.FullPath,
+      );
+
+      if (
+        !["MicrosoftForm", "file", "folder"].includes(entry.DestinationType)
+      ) {
+        console.error("Unknown destination type. Add it to the codebase");
+      }
 
       if (
         this.map[key] &&
@@ -78,12 +90,23 @@ export class MigrationMapper {
     );
   }
 
-  private createKey(sourcePath: string, fullPath: string): string {
-    return `${sourcePath}::${this.replaceAll(fullPath, this.charSubstitutes)}`;
+  private createKey(
+    sourcePath: string,
+    fileType: DestinationType,
+    fullPath: string,
+  ): string {
+    return `${sourcePath}::${fileType}::${this.replaceAll(
+      fullPath,
+      this.charSubstitutes,
+    )}`;
   }
 
-  public getEntry(sourcePath: string, fullPath: string): MigrationEntry {
-    const key = this.createKey(sourcePath, fullPath);
+  public getEntry(
+    sourcePath: string,
+    fileType: DestinationType,
+    fullPath: string,
+  ): MigrationEntry {
+    const key = this.createKey(sourcePath, fileType, fullPath);
     this.map[key] && this.map[key]._getCount++;
     if (this.map[key] && this.map[key]?._getCount > this.maxGetCount) {
       this.maxGetCount = this.map[key]._getCount;

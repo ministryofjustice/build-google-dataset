@@ -2,6 +2,7 @@ export interface FileResult {
 	id: string;
 	name: string;
 	googlePath: string;
+	googleType: "MicrosoftForm" | "file" | "folder";
 	microsoftPath: string;
 	url: string;
 	ownerEmail: string;
