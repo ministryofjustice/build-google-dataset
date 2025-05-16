@@ -43,7 +43,7 @@ export class MigrationMapper {
       if (
         !["MicrosoftForm", "file", "folder"].includes(entry.DestinationType)
       ) {
-        console.error("Unknown destination type. Add it to the codebase");
+        console.error("Unknown destination type. Add it to the codebase", entry.DestinationType);
       }
 
       if (
