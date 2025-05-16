@@ -12,7 +12,12 @@ import { S3Utils } from "./s3Utils";
 import { FileResult } from "./types/FileResult";
 import { GoogleAuthService } from "./googleAuthService";
 import { MigrationMapper } from "./migrationMapper";
-import { IS_PROD, MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
+import {
+  IS_PROD,
+  GOOGLE_API_CONCURRENCY,
+  MIGRATION_LOG_INPUT_CSV,
+  OUTPUT_CSV,
+} from "./config";
 import { router } from "./upload.router";
 
 const knownErrors = ["The domain administrators have disabled Drive apps."];
@@ -36,8 +41,6 @@ async function buildDataset(): Promise<DatasetSummary> {
   const migrationLog = CSVUtils.readMigrationLog();
   const migrationLogService = new MigrationMapper(migrationLog as any);
   const emails = migrationLogService.emails;
-
-  const CONCURRENCY = 25; // Process 25 users concurrently
 
   const summary: DatasetSummary = {
     processedCount: 0,
@@ -129,7 +132,7 @@ async function buildDataset(): Promise<DatasetSummary> {
     }
   }
 
-  await PromisePool.withConcurrency(CONCURRENCY)
+  await PromisePool.withConcurrency(GOOGLE_API_CONCURRENCY)
     .for(emails)
     .process(async (email: string, index: number) => {
       const files = await getMigratedFilesByEmail(email, index);

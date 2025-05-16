@@ -11,6 +11,7 @@ services:
     env_file:
       - .env
     environment: 
+      GOOGLE_API_CONCURRENCY: "50"
       MIGRATION_LOG_INPUT_CSV: resources/migration_log_input.csv
     volumes:
       - node_modules:/home/node/node_modules
