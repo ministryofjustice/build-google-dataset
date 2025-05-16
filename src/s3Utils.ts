@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import path from "node:path";
 import fsPromises from "node:fs/promises";
 import { MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
 import {
@@ -157,40 +158,42 @@ export class S3Utils {
    * The files are downloaded using the S3 client and saved with the same name as in S3.
    */
   public static async pullResourcesFromS3(): Promise<void> {
-    const resourceKeys = [MIGRATION_LOG_INPUT_CSV];
+    const key = MIGRATION_LOG_INPUT_CSV;
+
+    console.log(key);
 
     const s3Client = new S3Client(this.getS3ClientParams());
-  
+
     // Delete the local /tmp/resources folder.
     await fsPromises.rm("/tmp/resources", { recursive: true, force: true });
 
     // Create the directory.
     await fsPromises.mkdir("/tmp/resources", { recursive: true });
-    
-    for (const key of resourceKeys) {
-      const downloadParams = {
-        Bucket: process.env.AWS_S3_BUCKET,
-        Key: key,
-      };
 
-      // Ensure the directory exists
-      const localPath = `/tmp/${key}`;
+    const downloadParams = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+    };
 
-      const command = new GetObjectCommand(downloadParams);
+    // Ensure the directory exists
+    const localFile = `/tmp/${key}`;
+    const localPath = path.dirname(localFile);
+    await fsPromises.mkdir(localPath, { recursive: true });
 
-      const res = await s3Client.send(command);
+    const command = new GetObjectCommand(downloadParams);
 
-      if (!res.Body) {
-        throw new Error(`No body in response for ${key}`);
-      }
+    const res = await s3Client.send(command);
 
-      const bodyString = await res.Body.transformToString();
-
-      // Us async fs to write file
-      await fsPromises.writeFile(localPath, bodyString);
-
-      console.log(`Downloaded ${key} to ${localPath}`);
+    if (!res.Body) {
+      throw new Error(`No body in response for ${key}`);
     }
+
+    const bodyString = await res.Body.transformToString();
+
+    // Us async fs to write file
+    await fsPromises.writeFile(localFile, bodyString);
+
+    console.log(`Downloaded ${key} to ${localFile}`);
   }
 
   /**
@@ -200,32 +203,35 @@ export class S3Utils {
    */
   public static async moveS3ResourceFilesToCompleted(): Promise<void> {
     const s3Client = new S3Client(this.getS3ClientParams());
-    const resourceKeys = [MIGRATION_LOG_INPUT_CSV];
+    const key = MIGRATION_LOG_INPUT_CSV;
 
     const timestamp = new Date().toISOString().replace(/:/g, "-");
     const completedDir = `completed/${timestamp}/`;
 
-    for (const key of resourceKeys) {
-      const destination = key.replace(/resources\//, completedDir);
-      const copyParams = {
-        Bucket: process.env.AWS_S3_BUCKET,
-        CopySource: `${process.env.AWS_S3_BUCKET}/${key}`,
-        Key: destination,
-      };
+    let destination = key.replace(/resources\//, completedDir);
 
-      await s3Client.send(new CopyObjectCommand(copyParams));
-
-      console.log(`Copied ${key} to ${destination}`);
-
-      // Delete the original file
-      const deleteParams = {
-        Bucket: process.env.AWS_S3_BUCKET,
-        Key: key,
-      };
-
-      await s3Client.send(new DeleteObjectCommand(deleteParams));
-
-      console.log(`Deleted original file ${key}`);
+    if (key.startsWith("completed")) {
+      destination = key.replace(/completed\//, completedDir);
     }
+
+    const copyParams = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      CopySource: `${process.env.AWS_S3_BUCKET}/${key}`,
+      Key: destination,
+    };
+
+    await s3Client.send(new CopyObjectCommand(copyParams));
+
+    console.log(`Copied ${key} to ${destination}`);
+
+    // Delete the original file
+    const deleteParams = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+    };
+
+    await s3Client.send(new DeleteObjectCommand(deleteParams));
+
+    console.log(`Deleted original file ${key}`);
   }
 }
