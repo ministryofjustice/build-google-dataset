@@ -194,7 +194,7 @@ async function main(): Promise<void> {
   console.log("Running build dataset...");
   const datasetSummary = await buildDataset();
 
-  console.log("Dataset summary", datasetSummary);
+  console.log("Dataset summary", JSON.stringify(datasetSummary));
 
   // If there is no file at `/tmp/build-output/dataset.csv` then wait 5 mins
   if (!(await fsPromises.stat(`/tmp/${OUTPUT_CSV}`).catch(() => false))) {
