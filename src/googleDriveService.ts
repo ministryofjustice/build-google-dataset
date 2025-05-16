@@ -53,10 +53,6 @@ export class GoogleDriveService {
       const fileId = item.id ?? ""; // how can a file not have an ID?!
       const filePaths = this.buildPaths(fileId);
 
-      if (item.name?.includes("Form")) {
-        console.log("Form", item);
-      }
-
       for (const filePath of filePaths) {
         results.push({
           id: fileId,
