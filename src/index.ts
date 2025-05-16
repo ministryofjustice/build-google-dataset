@@ -143,7 +143,7 @@ async function buildDataset(): Promise<DatasetSummary> {
 
   const unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
 
-  // A 2 in this line number 2 in the CSV.
+  // A 2 in this list relates to line number 2 in the CSV.
   // Because the CSV has a header row, 2 is the first row of data.
   if (unprocessedLogEntries.length) {
     console.log(
