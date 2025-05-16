@@ -81,9 +81,13 @@ async function buildDataset(): Promise<void> {
       const userFilesWithMigrationProperties = [];
 
       for (const file of userFiles) {
-        userFilesWithMigrationProperties.push(
-          addMigrationPropertiesToUsersFile(email, file),
+        const fileWithMaybeExtraProperties = addMigrationPropertiesToUsersFile(
+          email,
+          file,
         );
+        if (fileWithMaybeExtraProperties.destinationLocation) {
+          userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
+        }
       }
 
       return userFilesWithMigrationProperties;
