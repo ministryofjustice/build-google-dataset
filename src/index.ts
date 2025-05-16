@@ -65,6 +65,7 @@ async function buildDataset(): Promise<DatasetSummary> {
       email,
       file.googleType,
       file.googlePath,
+      file.name
     );
     if (migrationEntry) {
       file.destinationLocation = migrationEntry.DestinationLocation;
@@ -96,10 +97,14 @@ async function buildDataset(): Promise<DatasetSummary> {
 
     const driveService = new GoogleDriveService(
       authService.getJwtForUser(email),
+      identifier,
     );
     try {
       const userFiles = await driveService.getDriveFiles();
       console.timeEnd(`Fetching files for ${identifier}`);
+
+      console.log(userFiles.filter((path) => path.googlePath.includes('bee')));
+      // console.log(userFiles.filter((path) => path.googleType === 'folder'));
 
       const userFilesWithMigrationProperties = [];
 
@@ -108,7 +113,7 @@ async function buildDataset(): Promise<DatasetSummary> {
           email,
           file,
         );
-        if (fileWithMaybeExtraProperties.destinationLocation) {
+        if (fileWithMaybeExtraProperties.destinationLocation?.length) {
           userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
         }
       }

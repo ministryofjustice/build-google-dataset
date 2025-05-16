@@ -13,8 +13,9 @@ type FileData = {
 export class GoogleDriveService {
   private drive: drive_v3.Drive;
   private fileMetadata: Record<string, FileData> = {};
+  private fetchPage = 0;
 
-  constructor(private readonly jwt: JWT) {
+  constructor(private readonly jwt: JWT, private readonly identifier: string) {
     this.drive = google.drive({
       version: "v3",
       auth: this.jwt,
@@ -86,6 +87,16 @@ export class GoogleDriveService {
     const files = response.data.files ?? [];
 
     if (response.data.nextPageToken) {
+      this.fetchPage++;
+
+      if (this.fetchPage % 5 === 0) {
+        console.log(
+          `Fetching page ${this.fetchPage} for ${this.identifier}...`,
+        );
+      }
+
+      this.identifier;
+
       return [
         ...files,
         ...(await this.fetchAllFiles(response.data.nextPageToken)),
