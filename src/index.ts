@@ -38,7 +38,7 @@ const isGaxiosError = (
 
 async function buildDataset(): Promise<DatasetSummary> {
   const authService = new GoogleAuthService();
-  const migrationLog = CSVUtils.readMigrationLog();
+  const migrationLog = await CSVUtils.readMigrationLog();
   const migrationLogService = new MigrationMapper(migrationLog as any);
   const emails = migrationLogService.emails;
 
