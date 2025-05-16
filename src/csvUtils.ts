@@ -24,7 +24,6 @@ export class CSVUtils {
           console.error("Error in readMigrationLog", error),
         )
         .on("data", (row: Record<string, string>) => {
-          console.log(row);
           const filteredRow: Record<string, string> = {};
           selectedFields.forEach((field) => {
             if (row[field] !== undefined) {
