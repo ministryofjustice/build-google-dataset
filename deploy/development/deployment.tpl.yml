@@ -53,6 +53,8 @@ spec:
                   key: bucket_name
             - name: BASE_HOST
               value: migration-link-exchange-build-dev.apps.live.cloud-platform.service.justice.gov.uk
+            - name: MIGRATION_LOG_INPUT_CSV
+              value: resources/migration_log_input.csv
           envFrom:
             - secretRef:
                 name: ${KUBE_NAMESPACE}-secrets
