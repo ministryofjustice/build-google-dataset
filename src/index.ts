@@ -103,9 +103,6 @@ async function buildDataset(): Promise<DatasetSummary> {
       const userFiles = await driveService.getDriveFiles();
       console.timeEnd(`Fetching files for ${identifier}`);
 
-      console.log(userFiles.filter((path) => path.googlePath.includes('bee')));
-      // console.log(userFiles.filter((path) => path.googleType === 'folder'));
-
       const userFilesWithMigrationProperties = [];
 
       for (const file of userFiles) {
