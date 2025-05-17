@@ -28,6 +28,11 @@ type DatasetSummary = {
   csvCollisionCount: number;
   mapCount: number;
   lookupAggregates: { [lookupCount: number]: number };
+  characterStats: {
+    logFullPath: string[];
+    googleFilenames: string[];
+    onlyInGoogleFileNames: string[];
+  };
 };
 
 const isGaxiosError = (
@@ -48,6 +53,11 @@ async function buildDataset(): Promise<DatasetSummary> {
     csvCollisionCount: migrationLogService.csvCollisionCount,
     mapCount: migrationLogService.mapCount,
     lookupAggregates: {},
+    characterStats: {
+      logFullPath: [],
+      googleFilenames: [],
+      onlyInGoogleFileNames: [],
+    },
   };
 
   /**
@@ -164,6 +174,8 @@ async function buildDataset(): Promise<DatasetSummary> {
   // Lookup aggregates, key is lookup count, and value is number of rows.
   // Zero here, means a row in the migration log was not processed
   summary.lookupAggregates = migrationLogService.getProcessedAggregates();
+
+  summary.characterStats = migrationLogService.getCharacterStats();
 
   return summary;
 }
