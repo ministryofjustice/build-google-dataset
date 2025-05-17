@@ -15,6 +15,12 @@ interface MigrationEntry {
 export class MigrationMapper {
   private readonly map: Record<string, MigrationEntry> = {};
 
+  // An array of every distinct character used in the log's FullPath column.
+  public readonly allLogFullPathCharacters: Set<string> = new Set();
+
+  // An array of every distinct character used in the Google fileNames.
+  public readonly allGoogleFilenameCharacters: Set<string> = new Set();
+
   public readonly emails: string[] = [];
 
   public readonly mapCount: number;
@@ -83,6 +89,12 @@ export class MigrationMapper {
         this.emails.push(entry.SourcePath);
       }
 
+      // For each character in the FullPath, add it to the allLogFullPathCharacters set, if it's not already there.
+      for (const char of entry.FullPath) {
+        this.allLogFullPathCharacters.add(char);
+      }
+      this.allLogFullPathCharacters.delete("/");
+
       csvLineNumber++;
     }
     this.mapCount = Object.keys(this.map).length;
@@ -118,6 +130,10 @@ export class MigrationMapper {
   ): MigrationEntry | undefined {
     let returnedEntry: MigrationEntry | undefined;
     let loopIndex = 0;
+
+    for (const char of fileName) {
+      this.allGoogleFilenameCharacters.add(char);
+    }
 
     while (!returnedEntry && loopIndex < 1000) {
       const key = this.createKey(
@@ -210,5 +226,21 @@ export class MigrationMapper {
     const fileExtension = fileNameParts.pop();
     const fileNameWithoutExtension = fileNameParts.join(".");
     return `${fileNameWithoutExtension} (${number}).${fileExtension}`;
+  }
+
+  public getCharacterStats(): {
+    logFullPath: string[];
+    googleFilenames: string[];
+    onlyInGoogleFileNames: string[];
+  } {
+    return {
+      logFullPath: Array.from(this.allLogFullPathCharacters).sort(),
+      googleFilenames: Array.from(this.allGoogleFilenameCharacters).sort(),
+      onlyInGoogleFileNames: Array.from(
+        this.allGoogleFilenameCharacters.difference(
+          this.allLogFullPathCharacters,
+        ),
+      ),
+    };
   }
 }
