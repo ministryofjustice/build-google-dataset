@@ -1,11 +1,12 @@
 import fsPromises from "node:fs/promises";
+import { createHash } from "node:crypto";
 import express, {
   type Request,
   type Response,
   type NextFunction,
 } from "express";
 import { PromisePool } from "@supercharge/promise-pool";
-import { GoogleDriveService } from "./googleDriveService";
+import { listParams, GoogleDriveService } from "./googleDriveService";
 import { CSVUtils } from "./csvUtils";
 import { Notify } from "./notify";
 import { CacheUtils } from "./cacheUtils";
@@ -103,12 +104,17 @@ async function buildDataset(): Promise<DatasetSummary> {
   ): Promise<FileResult[]> {
     const identifier = IS_PROD ? `email index ${emailIndex}` : email;
 
+    const googleParamsHash = createHash("sha256")
+      .update(JSON.stringify(listParams))
+      .digest("hex");
+
     /**
      * Checking cache for files
      */
     const cachedUserFiles = await CacheUtils.getFileResultsForUser(
       email,
       identifier,
+      googleParamsHash,
     );
 
     if (cachedUserFiles?.length) {
@@ -144,7 +150,12 @@ async function buildDataset(): Promise<DatasetSummary> {
       const userFiles = await driveService.getDriveFiles();
       console.timeEnd(`Fetching files for ${identifier}`);
 
-      await CacheUtils.cacheFileResultsForUser(userFiles, email, identifier);
+      await CacheUtils.cacheFileResultsForUser(
+        userFiles,
+        email,
+        identifier,
+        googleParamsHash,
+      );
 
       const userFilesWithMigrationProperties = [];
 

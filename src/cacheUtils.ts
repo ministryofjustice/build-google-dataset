@@ -5,7 +5,8 @@ export class CacheUtils {
   public static async cacheFileResultsForUser(
     fileResults: FileResult[],
     email: string,
-    identifier?: string,
+    identifier: string,
+    hash: string,
   ): Promise<void> {
     console.time(`Caching files for ${identifier}`);
 
@@ -13,9 +14,11 @@ export class CacheUtils {
       return JSON.stringify(fileResult);
     });
 
+    const key = `resources/cache/${hash}/${email}.jsonl`;
+
     // Upload the file to S3.
     await S3Utils.uploadContentToS3(
-      `resources/cache/${email}.jsonl`,
+      key,
       jsonl.join("\n"),
       "application/jsonl",
     );
@@ -25,17 +28,18 @@ export class CacheUtils {
 
   public static async getFileResultsForUser(
     email: string,
-    identifier?: string,
+    identifier: string,
+    hash: string,
   ): Promise<FileResult[] | null> {
     console.time(`Getting cached files for ${identifier}`);
 
-    const key = `resources/cache/${email}.jsonl`;
+    const key = `resources/cache/${hash}/${email}.jsonl`;
 
     // Check if the file exists in S3
     const exists = await S3Utils.s3FileExists(key);
 
     if (!exists) {
-      console.log(`File not found in S3: ${identifier}`);
+      console.log(`Cache not found in for: ${identifier}`);
       return null;
     }
 
