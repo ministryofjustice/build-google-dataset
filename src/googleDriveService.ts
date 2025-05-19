@@ -10,6 +10,16 @@ type FileData = {
   paths?: string[];
 };
 
+export const listParams: drive_v3.Params$Resource$Files$List = {
+  spaces: "drive",
+  fields:
+    "nextPageToken, files(id, name, mimeType, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime, createdTime)",
+  orderBy: "createdTime", // Important for working out which files should match renames like (1), (2), etc.
+  supportsAllDrives: true,
+  includeItemsFromAllDrives: true,
+  corpora: "allDrives",
+};
+
 export class GoogleDriveService {
   private drive: drive_v3.Drive;
   private fileMetadata: Record<string, FileData> = {};
@@ -78,12 +88,9 @@ export class GoogleDriveService {
     pageToken?: string,
   ): Promise<drive_v3.Schema$File[]> {
     const response = await this.drive.files.list({
-      q: "'me' in writers or sharedWithMe",
-      spaces: "drive",
-      fields:
-        "nextPageToken, files(id, name, mimeType, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime, createdTime)",
+      ...listParams,
+      pageSize: 1000,
       pageToken,
-      orderBy: "createdTime", // Important for working out which files should match renames like (1), (2), etc.
     });
     const files = response.data.files ?? [];
 
