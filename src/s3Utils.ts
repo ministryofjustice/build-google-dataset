@@ -75,6 +75,21 @@ export class S3Utils {
   }
 
   /**
+   * Upload content to S3
+   */
+  public static async uploadContentToS3(key: string, content: string, contentType: string): Promise<void> {
+    const s3Client = new S3Client(this.getS3ClientParams());
+    const uploadParams = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: content,
+      ContentType: contentType,
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+  }
+
+  /**
    * Checks if a file exists in the S3 bucket.
    * @param key The key of the file to check in the S3 bucket.
    * @returns A promise that resolves to true if the file exists, or false if it does not.
@@ -160,8 +175,6 @@ export class S3Utils {
   public static async pullResourcesFromS3(): Promise<void> {
     const key = MIGRATION_LOG_INPUT_CSV;
 
-    console.log(key);
-
     const s3Client = new S3Client(this.getS3ClientParams());
 
     // Delete the local /tmp/resources folder.
@@ -194,6 +207,27 @@ export class S3Utils {
     await fsPromises.writeFile(localFile, bodyString);
 
     console.log(`Downloaded ${key} to ${localFile}`);
+  }
+
+  /**
+   * Downloads a file from S3 and returns its content as a string.
+   */
+  public static async getContentFromS3(key: string): Promise<string> {
+    const s3Client = new S3Client(this.getS3ClientParams());
+    const downloadParams = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+    };
+
+    const command = new GetObjectCommand(downloadParams);
+
+    const res = await s3Client.send(command);
+
+    if (!res.Body) {
+      throw new Error(`No body in response for ${key}`);
+    }
+
+    return res.Body.transformToString();
   }
 
   /**
