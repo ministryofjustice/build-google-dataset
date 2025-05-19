@@ -8,6 +8,7 @@ import { PromisePool } from "@supercharge/promise-pool";
 import { GoogleDriveService } from "./googleDriveService";
 import { CSVUtils } from "./csvUtils";
 import { Notify } from "./notify";
+import { CacheUtils } from "./cacheUtils";
 import { S3Utils } from "./s3Utils";
 import { FileResult } from "./types/FileResult";
 import { GoogleAuthService } from "./googleAuthService";
@@ -102,16 +103,48 @@ async function buildDataset(): Promise<DatasetSummary> {
   ): Promise<FileResult[]> {
     const identifier = IS_PROD ? `email index ${emailIndex}` : email;
 
-    console.log(`Fetching files for ${identifier}`);
-    console.time(`Fetching files for ${identifier}`);
-
-    const driveService = new GoogleDriveService(
-      authService.getJwtForUser(email),
+    /**
+     * Checking cache for files
+     */
+    const cachedUserFiles = await CacheUtils.getFileResultsForUser(
+      email,
       identifier,
     );
+
+    if (cachedUserFiles?.length) {
+      console.time(`Processing cached files for ${identifier}`);
+
+      const userFilesWithMigrationProperties = [];
+
+      for (const file of cachedUserFiles) {
+        const fileWithMaybeExtraProperties = addMigrationPropertiesToUsersFile(
+          email,
+          file,
+        );
+        if (fileWithMaybeExtraProperties.destinationLocation?.length) {
+          userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
+        }
+      }
+
+      console.timeEnd(`Processing cached files for ${identifier}`);
+      return userFilesWithMigrationProperties;
+    }
+
+    /**
+     * Fetching files from Google Drive
+     */
+    console.time(`Fetching files for ${identifier}`);
+
     try {
+      const driveService = new GoogleDriveService(
+        authService.getJwtForUser(email),
+        identifier,
+      );
+
       const userFiles = await driveService.getDriveFiles();
       console.timeEnd(`Fetching files for ${identifier}`);
+
+      await CacheUtils.cacheFileResultsForUser(userFiles, email, identifier);
 
       const userFilesWithMigrationProperties = [];
 
