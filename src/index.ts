@@ -35,6 +35,13 @@ type DatasetSummary = {
     googleFilenames: string[];
     onlyInGoogleFileNames: string[];
   };
+  unprocessedLogEntries?: {
+    indexes: number[];
+    sourceExtensions: { [extension: string]: number };
+    destinationExtensions: { [extension: string]: number };
+    fullPathChars: { [character: string]: number };
+    copyNumbers: { [number: number]: number };
+  };
 };
 
 const isGaxiosError = (
@@ -117,7 +124,7 @@ async function buildDataset(): Promise<DatasetSummary> {
       googleParamsHash,
     );
 
-    if (cachedUserFiles?.length) {
+    if (0 && cachedUserFiles?.length) {
       console.time(`Processing cached files for ${identifier}`);
 
       const userFilesWithMigrationProperties = [];
@@ -208,12 +215,13 @@ async function buildDataset(): Promise<DatasetSummary> {
 
   // A 2 in this list relates to line number 2 in the CSV.
   // Because the CSV has a header row, 2 is the first row of data.
-  if (unprocessedLogEntries.length) {
+  // if (unprocessedLogEntries.indexes.length) {
     console.log(
       "unprocessedLogEntries (csv line numbers)",
-      unprocessedLogEntries.join(", "),
+      unprocessedLogEntries.indexes.join(", "),
     );
-  }
+    summary.unprocessedLogEntries = unprocessedLogEntries;
+  // }
 
   // Lookup aggregates, key is lookup count, and value is number of rows.
   // Zero here, means a row in the migration log was not processed
@@ -266,6 +274,11 @@ async function main(): Promise<void> {
   const datasetSummary = await buildDataset();
 
   console.log("Dataset summary", JSON.stringify(datasetSummary));
+
+  console.log("Waiting 5 minutes before retrying...");
+  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+  main();
+  return;
 
   // If there is no file at `/tmp/build-output/dataset.csv` then wait 5 mins
   if (!(await fsPromises.stat(`/tmp/${OUTPUT_CSV}`).catch(() => false))) {

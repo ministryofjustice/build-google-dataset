@@ -12,8 +12,28 @@ type FileData = {
 
 export const listParams: drive_v3.Params$Resource$Files$List = {
   spaces: "drive",
-  fields:
-    "nextPageToken, files(id, name, mimeType, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime, createdTime)",
+  fields: `nextPageToken, files(${[
+    "id",
+    "name",
+    "mimeType",
+    "parents",
+    "webViewLink",
+    "owners(emailAddress)",
+    "lastModifyingUser(emailAddress)",
+    "viewedByMeTime",
+    "createdTime",
+    "md5Checksum",
+    "size",
+    "shared",
+    "originalFilename",
+    "sha1Checksum",
+    "sha256Checksum",
+    "resourceKey",
+    "originalFilename",
+    "fullFileExtension",
+    "fileExtension",
+  ].join(", ")})`,
+  // https://developers.google.com/workspace/drive/api/reference/rest/v3/files
   orderBy: "createdTime", // Important for working out which files should match renames like (1), (2), etc.
   supportsAllDrives: true,
   includeItemsFromAllDrives: true,
@@ -47,6 +67,8 @@ export class GoogleDriveService {
   public async getDriveFiles(): Promise<FileResult[]> {
     // 1 Collect all files from drive
     const allItems = await this.fetchAllFiles();
+
+    console.log(allItems);
 
     // 2) Build a dictionary of file info for local path-building.
     for (const item of allItems) {

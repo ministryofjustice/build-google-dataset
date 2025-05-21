@@ -8,6 +8,8 @@ interface MigrationEntry {
   MicrosoftPath: string;
   DestinationLocation: string;
   DestinationType: string;
+  SourceExtension: string;
+  DestinationExtension: string;
   _getCount: number;
   _csvLineNumber: number;
 }
@@ -135,7 +137,7 @@ export class MigrationMapper {
       this.allGoogleFilenameCharacters.add(char);
     }
 
-    while (!returnedEntry && loopIndex < 1000) {
+    while (!returnedEntry && loopIndex < 1) {
       const key = this.createKey(
         sourcePath,
         fileType,
@@ -190,18 +192,94 @@ export class MigrationMapper {
     return entry.DestinationLocation.endsWith(this.rootDestinationFolder);
   }
 
-  public getUnprocessedLogEntries() {
-    const migrationLogIndexes = [];
+  public getUnprocessedLogEntries(): {
+    indexes: number[];
+    sourceExtensions: { [extension: string]: number };
+    destinationExtensions: { [extension: string]: number };
+    fullPathChars: { [character: string]: number };
+    copyNumbers: { [number: number]: number };
+  } {
+    const stats: {
+      indexes: number[];
+      sourceExtensions: { [extension: string]: number };
+      destinationExtensions: { [extension: string]: number };
+      destinationTypes: { [type: string]: number };
+      fullPathChars: { [character: string]: number };
+      copyNumbers: { [number: number]: number };
+    } = {
+      indexes: [],
+      sourceExtensions: {},
+      destinationExtensions: {},
+      destinationTypes: {},
+      fullPathChars: {},
+      // Number from the file name, e.g. (1), (2), etc.
+      copyNumbers: {},
+    };
+
     let loopIndex = 0;
     for (const entry of Object.values(this.map)) {
       if (!entry._getCount && !this.entryIsLikelyRootFolder(entry)) {
         // If the entry is not processed and is not a root folder, add it to the list
         // of unprocessed log entries.
-        migrationLogIndexes.push(entry._csvLineNumber);
+        stats.indexes.push(entry._csvLineNumber);
+
+        // Update the stats for the unprocessed entry.
+        if (!stats.sourceExtensions[entry.SourceExtension]) {
+          stats.sourceExtensions[entry.SourceExtension] = 0;
+        }
+        stats.sourceExtensions[entry.SourceExtension]++;
+
+        if (!stats.destinationTypes[entry.DestinationType]) {
+          stats.destinationTypes[entry.DestinationType] = 0;
+        }
+        stats.destinationTypes[entry.DestinationType]++;
+
+        if (!stats.destinationExtensions[entry.DestinationExtension]) {
+          stats.destinationExtensions[entry.DestinationExtension] = 0;
+        }
+        stats.destinationExtensions[entry.DestinationExtension]++;
+
+        const fullPathWithoutLeadingSlash = entry.FullPath.replace(/^\//, "");
+        for (const char of fullPathWithoutLeadingSlash) {
+          if (!stats.fullPathChars[char]) {
+            stats.fullPathChars[char] = 0;
+          }
+          stats.fullPathChars[char]++;
+        }
+
+        // Check if the file name ends in a number in parentheses, e.g. (1), (2), etc.
+        // Or ends in a number in parentheses with a file extension e.g. (1).txt, (2).docx, etc.
+        const match = entry.FullPath.match(/\((\d+)\)(\.[a-z]{2,4})?$/);
+        if (match) {
+          const number = parseInt(match[1], 10);
+          if (!stats.copyNumbers[number]) {
+            stats.copyNumbers[number] = 0;
+          }
+          stats.copyNumbers[number]++;
+        }
       }
       loopIndex++;
     }
-    return migrationLogIndexes;
+
+    // Sort the stats objects by key
+    stats.sourceExtensions = Object.fromEntries(
+      Object.entries(stats.sourceExtensions).sort(),
+    );
+    stats.destinationExtensions = Object.fromEntries(
+      Object.entries(stats.destinationExtensions).sort(),
+    );
+    stats.destinationTypes = Object.fromEntries(
+      Object.entries(stats.destinationTypes).sort(),
+    );
+    stats.fullPathChars = Object.fromEntries(
+      Object.entries(stats.fullPathChars).sort(),
+    );
+    stats.copyNumbers = Object.fromEntries(
+      Object.entries(stats.copyNumbers).sort(),
+    );
+    stats.indexes.sort((a, b) => a - b);
+
+    return stats;
   }
 
   public getProcessedAggregates(): { [lookupCount: number]: number } {
