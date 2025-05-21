@@ -5,6 +5,7 @@ import express, {
   type Response,
   type NextFunction,
 } from "express";
+import helmet from "helmet";
 import { PromisePool } from "@supercharge/promise-pool";
 import { listParams, GoogleDriveService } from "./googleDriveService";
 import { CSVUtils } from "./csvUtils";
@@ -311,6 +312,8 @@ async function main(): Promise<void> {
 // Server
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(helmet());
 
 app.set("trust proxy", true);
 
