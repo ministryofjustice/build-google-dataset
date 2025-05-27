@@ -12,8 +12,25 @@ type FileData = {
 
 export const listParams: drive_v3.Params$Resource$Files$List = {
   spaces: "drive",
-  fields:
-    "nextPageToken, files(id, name, mimeType, parents, webViewLink, owners(emailAddress), lastModifyingUser(emailAddress), viewedByMeTime, createdTime)",
+  fields: `nextPageToken, files(${[
+    "id",
+    "name",
+    "mimeType",
+    "parents",
+    "webViewLink",
+    "owners(emailAddress)",
+    "lastModifyingUser(emailAddress)",
+    "viewedByMeTime",
+    "createdTime",
+    "size",
+    "shared",
+    "originalFilename",
+    "sha256Checksum",
+    "resourceKey",
+    "fullFileExtension",
+    "fileExtension",
+  ].join(", ")})`,
+  // https://developers.google.com/workspace/drive/api/reference/rest/v3/files
   orderBy: "createdTime", // Important for working out which files should match renames like (1), (2), etc.
   supportsAllDrives: true,
   includeItemsFromAllDrives: true,

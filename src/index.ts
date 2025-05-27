@@ -36,6 +36,13 @@ type DatasetSummary = {
     googleFilenames: string[];
     onlyInGoogleFileNames: string[];
   };
+  unprocessedLogEntries?: {
+    indexes: number[];
+    sourceExtensions: { [extension: string]: number };
+    destinationExtensions: { [extension: string]: number };
+    fullPathChars: { [character: string]: number };
+    copyNumbers: { [number: number]: number };
+  };
 };
 
 const isGaxiosError = (
@@ -205,16 +212,7 @@ async function buildDataset(): Promise<DatasetSummary> {
       return;
     });
 
-  const unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
-
-  // A 2 in this list relates to line number 2 in the CSV.
-  // Because the CSV has a header row, 2 is the first row of data.
-  if (unprocessedLogEntries.length) {
-    console.log(
-      "unprocessedLogEntries (csv line numbers)",
-      unprocessedLogEntries.join(", "),
-    );
-  }
+  summary.unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
 
   // Lookup aggregates, key is lookup count, and value is number of rows.
   // Zero here, means a row in the migration log was not processed

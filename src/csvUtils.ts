@@ -10,6 +10,8 @@ export class CSVUtils {
       "FullPath",
       "DestinationLocation",
       "DestinationType",
+      "DestinationExtension",
+      "SourceExtension",
     ],
   ): Promise<Record<string, string>[]> {
     return new Promise<Record<string, string>[]>((resolve) => {
