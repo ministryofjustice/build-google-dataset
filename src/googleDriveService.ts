@@ -22,13 +22,11 @@ export const listParams: drive_v3.Params$Resource$Files$List = {
     "lastModifyingUser(emailAddress)",
     "viewedByMeTime",
     "createdTime",
-    "md5Checksum",
     "size",
     "shared",
     "originalFilename",
     "sha256Checksum",
     "resourceKey",
-    "originalFilename",
     "fullFileExtension",
     "fileExtension",
   ].join(", ")})`,
@@ -66,8 +64,6 @@ export class GoogleDriveService {
   public async getDriveFiles(): Promise<FileResult[]> {
     // 1 Collect all files from drive
     const allItems = await this.fetchAllFiles();
-
-    console.log(allItems);
 
     // 2) Build a dictionary of file info for local path-building.
     for (const item of allItems) {
