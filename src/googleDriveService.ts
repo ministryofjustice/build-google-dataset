@@ -26,7 +26,6 @@ export const listParams: drive_v3.Params$Resource$Files$List = {
     "size",
     "shared",
     "originalFilename",
-    "sha1Checksum",
     "sha256Checksum",
     "resourceKey",
     "originalFilename",
