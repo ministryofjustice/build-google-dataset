@@ -212,17 +212,7 @@ async function buildDataset(): Promise<DatasetSummary> {
       return;
     });
 
-  const unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
-
-  // A 2 in this list relates to line number 2 in the CSV.
-  // Because the CSV has a header row, 2 is the first row of data.
-  // if (unprocessedLogEntries.indexes.length) {
-    console.log(
-      "unprocessedLogEntries (csv line numbers)",
-      unprocessedLogEntries.indexes.join(", "),
-    );
-    summary.unprocessedLogEntries = unprocessedLogEntries;
-  // }
+  summary.unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
 
   // Lookup aggregates, key is lookup count, and value is number of rows.
   // Zero here, means a row in the migration log was not processed
