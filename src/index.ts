@@ -125,7 +125,7 @@ async function buildDataset(): Promise<DatasetSummary> {
       googleParamsHash,
     );
 
-    if (0 && cachedUserFiles?.length) {
+    if (cachedUserFiles?.length) {
       console.time(`Processing cached files for ${identifier}`);
 
       const userFilesWithMigrationProperties = [];
@@ -275,11 +275,6 @@ async function main(): Promise<void> {
   const datasetSummary = await buildDataset();
 
   console.log("Dataset summary", JSON.stringify(datasetSummary));
-
-  console.log("Waiting 5 minutes before retrying...");
-  await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
-  main();
-  return;
 
   // If there is no file at `/tmp/build-output/dataset.csv` then wait 5 mins
   if (!(await fsPromises.stat(`/tmp/${OUTPUT_CSV}`).catch(() => false))) {
