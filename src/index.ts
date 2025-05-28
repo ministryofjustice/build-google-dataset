@@ -301,6 +301,12 @@ async function main(): Promise<void> {
   // Send success email notification
   await Notify.sendEmail("11ff2de6-9d50-431e-91f7-44f06a261261");
 
+  // If we are re-running the build on a completed dataset,
+  // the, don't run the main function again.
+  if(MIGRATION_LOG_INPUT_CSV.startsWith("completed/")) {
+    return;
+  }
+
   // If we've made it here, we have successfully run, start polling again for updates.
   main();
 

@@ -25,14 +25,12 @@ export class CSVUtils {
         // encoding: "utf8", // Default - may need to be updated.
       })
         .on("error", (error: any) =>
-          console.error("Error in readMigrationLog", error),
+          console.log("Error in readMigrationLog", error),
         )
-        .on("data-invalid", (row: any) =>
-          {
-            console.warn("Invalid row in readMigrationLog");
-            invalidRows++;
-          },
-        )
+        .on("data-invalid", (row: any) => {
+          console.log("Invalid row in readMigrationLog");
+          invalidRows++;
+        })
         .on("data", (row: Record<string, string>) => {
           const filteredRow: Record<string, string> = {};
           selectedFields.forEach((field) => {
@@ -44,11 +42,9 @@ export class CSVUtils {
         })
         .on("end", () => {
           resolve(results);
-          if (invalidRows > 0) {
-            console.warn(
-              `readMigrationLog: ${invalidRows} invalid rows were skipped.`,
-            );
-          }
+          console.log(
+            `readMigrationLog: ${invalidRows} invalid rows were skipped.`,
+          );
         });
     });
   }
