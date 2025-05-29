@@ -222,7 +222,9 @@ async function buildDataset(): Promise<DatasetSummary> {
     .process(async (email: string, index: number) => {
       const files = await getMigratedFilesByEmail(email, index);
 
-      await CSVUtils.writeOutputCsv(files);
+      if (files?.length) {
+        await CSVUtils.writeOutputCsv(files);
+      }
 
       summary.processedCount += files.length;
 
