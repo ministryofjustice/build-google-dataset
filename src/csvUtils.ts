@@ -72,7 +72,6 @@ export class CSVUtils {
       encoding: "utf8",
     });
     console.log(`Initialized output CSV at ${TMP_OUTPUT_CSV}`);
-
   }
 
   /**
@@ -80,26 +79,22 @@ export class CSVUtils {
    * By default, it overwrites OUTPUT_CSV.
    * If `options.append` is true, it will append without writing the header if the file already exists.
    */
-  public static async writeOutputCsv(
-    fileResults: FileResult[],
-  ): Promise<void> {
+  public static async writeOutputCsv(fileResults: FileResult[]): Promise<void> {
     const TMP_OUTPUT_CSV = `/tmp/${OUTPUT_CSV}`;
 
     // Convert fileResults to CSV lines (excluding header).
-    const dataRows = fileResults.map((file) =>
-      [
-        file.id || "",
-        file.name || "",
-        file.googlePath || "",
-        file.url || "",
-        file.ownerEmail || "",
-        file.viewedByMeTime || "",
-        file.lastModifyingUser || "",
-        file.destinationLocation || "",
-        file.microsoftPath || "",
-        file.destinationType || "",
-      ]
-    );
+    const dataRows = fileResults.map((file) => [
+      file.id || "",
+      file.name || "",
+      file.googlePath || "",
+      file.url || "",
+      file.ownerEmail || "",
+      file.viewedByMeTime || "",
+      file.lastModifyingUser || "",
+      file.destinationLocation || "",
+      file.microsoftPath || "",
+      file.destinationType || "",
+    ]);
 
     const csvContent = await writeToString(dataRows, {
       quote: true,
@@ -114,6 +109,14 @@ export class CSVUtils {
     return new Promise<boolean>((resolve) => {
       let invalidRows = 0;
 
+      // Ensure file exists before appending.
+      if (!fs.existsSync("/tmp/invalid_rows.csv")) {
+        fs.writeFileSync("/tmp/invalid_rows.csv", ""); // Create file if it doesn't exist.
+      }
+
+      // Delete contents of invalid_rows.csv before validation.
+      fs.writeFileSync("/tmp/invalid_rows.csv", "", { encoding: "utf8" });
+
       parseFile(`/tmp/${OUTPUT_CSV}`, {
         headers: true,
         strictColumnHandling: true,
@@ -124,6 +127,12 @@ export class CSVUtils {
         .on("data", () => {})
         .on("data-invalid", (row: any) => {
           console.log("Invalid row in validateOutputCsv");
+          // Append row to /tmp/invalid_rows.csv for debugging.
+          fs.appendFileSync(
+            "/tmp/invalid_rows.csv",
+            JSON.stringify(row) + "\n",
+            { encoding: "utf8" },
+          );
           invalidRows++;
         })
         .on("end", () => {
