@@ -106,8 +106,6 @@ export class CSVUtils {
       includeEndRowDelimiter: true,
     });
 
-    console.log(csvContent);
-
     fs.appendFileSync(TMP_OUTPUT_CSV, csvContent, { encoding: "utf8" });
   }
 
