@@ -227,6 +227,9 @@ async function buildDataset(): Promise<DatasetSummary> {
       return;
     });
 
+  await CSVUtils.validateOutputCsv();
+  console.log("CSV validation complete.");
+
   summary.unprocessedLogEntries =
     migrationLogService.getUnprocessedLogEntries();
 
