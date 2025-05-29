@@ -83,18 +83,25 @@ export class CSVUtils {
     const TMP_OUTPUT_CSV = `/tmp/${OUTPUT_CSV}`;
 
     // Convert fileResults to CSV lines (excluding header).
-    const dataRows = fileResults.map((file) => [
-      file.id || "",
-      file.name || "",
-      file.googlePath || "",
-      file.url || "",
-      file.ownerEmail || "",
-      file.viewedByMeTime || "",
-      file.lastModifyingUser || "",
-      file.destinationLocation || "",
-      file.microsoftPath || "",
-      file.destinationType || "",
-    ]);
+    const dataRows = fileResults
+      .filter((file) => file.id?.length)
+      .map((file) => [
+        file.id,
+        file.name || "",
+        file.googlePath || "",
+        file.url || "",
+        file.ownerEmail || "",
+        file.viewedByMeTime || "",
+        file.lastModifyingUser || "",
+        file.destinationLocation || "",
+        file.microsoftPath || "",
+        file.destinationType || "",
+      ]);
+
+    if (!dataRows.length) {
+      console.log("No valid file results to write to CSV.");
+      return;
+    }
 
     const csvContent = await writeToString(dataRows, {
       quote: true,
