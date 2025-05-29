@@ -21,7 +21,7 @@ services:
 
   minio:
     container_name: google-dataset-minio
-    image: minio/minio
+    image: minio/minio:latest
     ports:
       - "9000:9000" # The AWS S3 compatible API.
       - "9001:9001" # The Minio web console.
@@ -40,13 +40,13 @@ services:
 
   minio-init:
     container_name: google-dataset-minio-init
-    image: minio/mc
+    image: minio/mc:latest
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: |
       /bin/sh -c "
-        mc config host add dataset http://minio:9000 ${MINIO_USER} ${MINIO_PASSWORD}
+        mc alias set dataset http://minio:9000 ${MINIO_USER} ${MINIO_PASSWORD}
         mc mb dataset/${AWS_S3_BUCKET} --ignore-existing
         mc anonymous set download dataset/${AWS_S3_BUCKET};
         exit 0

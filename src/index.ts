@@ -74,26 +74,37 @@ async function buildDataset(): Promise<DatasetSummary> {
    * addMigrationPropertiesToUsersFile
    *
    * This function accepts a users email and the file object from the google API.
-   * It will for a matching entry in the migration log, and  if found,
+   * It will look for matching entry(ies) in the migration log, and  if found,
    * add additional properties to the file object.
    */
   function addMigrationPropertiesToUsersFile(
     email: string,
     file: FileResult,
-  ): FileResult {
-    const migrationEntry = migrationLogService.getEntry(
+  ): FileResult[] {
+    const migrationEntries = migrationLogService.getEntries(
       email,
       file.googleType,
       file.googlePath,
       file.name,
     );
-    if (migrationEntry) {
-      file.destinationLocation = migrationEntry.DestinationLocation;
-      file.destinationType = migrationEntry.DestinationType;
-      file.microsoftPath = migrationEntry.MicrosoftPath;
+
+    if (!migrationEntries?.length) {
+      // If no migration entries found, return the file as is
+      return [file];
     }
 
-    return file;
+    const returnFiles = [];
+
+    for (const migrationEntry of migrationEntries) {
+      returnFiles.push({
+        ...file,
+        destinationLocation: migrationEntry.DestinationLocation,
+        destinationType: migrationEntry.DestinationType,
+        microsoftPath: migrationEntry.MicrosoftPath,
+      });
+    }
+
+    return returnFiles;
   }
 
   /**
@@ -128,15 +139,17 @@ async function buildDataset(): Promise<DatasetSummary> {
     if (cachedUserFiles?.length) {
       console.time(`Processing cached files for ${identifier}`);
 
-      const userFilesWithMigrationProperties = [];
+      const userFilesWithMigrationProperties: FileResult[] = [];
 
       for (const file of cachedUserFiles) {
-        const fileWithMaybeExtraProperties = addMigrationPropertiesToUsersFile(
+        const filesWithMaybeExtraProperties = addMigrationPropertiesToUsersFile(
           email,
           file,
         );
-        if (fileWithMaybeExtraProperties.destinationLocation?.length) {
-          userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
+        for (const fileWithMaybeExtraProperties of filesWithMaybeExtraProperties) {
+          if (fileWithMaybeExtraProperties.destinationLocation?.length) {
+            userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
+          }
         }
       }
 
@@ -165,15 +178,17 @@ async function buildDataset(): Promise<DatasetSummary> {
         googleParamsHash,
       );
 
-      const userFilesWithMigrationProperties = [];
+      const userFilesWithMigrationProperties: FileResult[] = [];
 
       for (const file of userFiles) {
-        const fileWithMaybeExtraProperties = addMigrationPropertiesToUsersFile(
+        const filesWithMaybeExtraProperties = addMigrationPropertiesToUsersFile(
           email,
           file,
         );
-        if (fileWithMaybeExtraProperties.destinationLocation?.length) {
-          userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
+        for (const fileWithMaybeExtraProperties of filesWithMaybeExtraProperties) {
+          if (fileWithMaybeExtraProperties.destinationLocation?.length) {
+            userFilesWithMigrationProperties.push(fileWithMaybeExtraProperties);
+          }
         }
       }
 
@@ -212,7 +227,8 @@ async function buildDataset(): Promise<DatasetSummary> {
       return;
     });
 
-  summary.unprocessedLogEntries = migrationLogService.getUnprocessedLogEntries();
+  summary.unprocessedLogEntries =
+    migrationLogService.getUnprocessedLogEntries();
 
   // Lookup aggregates, key is lookup count, and value is number of rows.
   // Zero here, means a row in the migration log was not processed
@@ -303,7 +319,7 @@ async function main(): Promise<void> {
 
   // If we are re-running the build on a completed dataset,
   // the, don't run the main function again.
-  if(MIGRATION_LOG_INPUT_CSV.startsWith("completed/")) {
+  if (MIGRATION_LOG_INPUT_CSV.startsWith("completed/")) {
     return;
   }
 

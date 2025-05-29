@@ -124,20 +124,20 @@ export class MigrationMapper {
     )}`;
   }
 
-  public getEntry(
+  public getEntries(
     sourcePath: string,
     fileType: DestinationType,
     fullPath: string,
     fileName: string,
-  ): MigrationEntry | undefined {
-    let returnedEntry: MigrationEntry | undefined;
+  ): MigrationEntry[] {
+    let returnedEntries: MigrationEntry[] = [];
     let loopIndex = 0;
 
     for (const char of fileName) {
       this.allGoogleFilenameCharacters.add(char);
     }
 
-    while (!returnedEntry && loopIndex < 1) {
+    while (loopIndex < 999) {
       const key = this.createKey(
         sourcePath,
         fileType,
@@ -148,16 +148,14 @@ export class MigrationMapper {
         break;
       }
 
-      if (this.map[key]?._getCount === 0) {
-        this.map[key]._getCount++;
-        returnedEntry = this.map[key];
-      }
+      this.map[key]._getCount++;
+      returnedEntries.push(this.map[key]);
 
       loopIndex++;
     }
 
-    if (returnedEntry) {
-      return returnedEntry;
+    if (returnedEntries?.length) {
+      return returnedEntries;
     }
 
     // Let's have a second try to get the entry, if the file name contains a /
@@ -178,11 +176,11 @@ export class MigrationMapper {
         this.maxGetCount = this.map[normalisedKey]._getCount;
       }
       if (this.map[normalisedKey]) {
-        return this.map[normalisedKey];
+        return [this.map[normalisedKey]];
       }
     }
 
-    return undefined;
+    return returnedEntries;
   }
 
   public entryIsLikelyRootFolder(entry: MigrationEntry): boolean {
