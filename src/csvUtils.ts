@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { parseFile } from "@fast-csv/parse";
+import { writeToString } from "@fast-csv/format";
 import { MIGRATION_LOG_INPUT_CSV, OUTPUT_CSV } from "./config";
 import { FileResult } from "./types/FileResult";
 
@@ -49,19 +50,8 @@ export class CSVUtils {
     });
   }
 
-  /**
-   * Writes a list of FileResults to the output CSV.
-   * By default, it overwrites OUTPUT_CSV.
-   * If `options.append` is true, it will append without writing the header if the file already exists.
-   */
-  public static writeOutputCsv(
-    fileResults: FileResult[],
-    options?: { append?: boolean },
-  ): void {
+  public static initCSVOutputFile(): void {
     const TMP_OUTPUT_CSV = `/tmp/${OUTPUT_CSV}`;
-
-    const shouldAppend = options?.append === true;
-    const fileExists = fs.existsSync(TMP_OUTPUT_CSV);
 
     // The header row for a fresh CSV
     const headerRow = [
@@ -77,6 +67,24 @@ export class CSVUtils {
       "microsoftFileType",
     ];
 
+    // Write the header row to the output CSV file.
+    fs.writeFileSync(TMP_OUTPUT_CSV, headerRow.join(",") + "\n", {
+      encoding: "utf8",
+    });
+    console.log(`Initialized output CSV at ${TMP_OUTPUT_CSV}`);
+
+  }
+
+  /**
+   * Writes a list of FileResults to the output CSV.
+   * By default, it overwrites OUTPUT_CSV.
+   * If `options.append` is true, it will append without writing the header if the file already exists.
+   */
+  public static async writeOutputCsv(
+    fileResults: FileResult[],
+  ): Promise<void> {
+    const TMP_OUTPUT_CSV = `/tmp/${OUTPUT_CSV}`;
+
     // Convert fileResults to CSV lines (excluding header).
     const dataRows = fileResults.map((file) =>
       [
@@ -91,29 +99,16 @@ export class CSVUtils {
         file.microsoftPath || "",
         file.destinationType || "",
       ]
-        .map((value) => `"${value.replace(/"/g, '""')}"`)
-        .join(","),
     );
 
-    // If we're appending but the file doesn't exist, we should include a header:
-    const needsHeader = !fileExists || !shouldAppend;
+    const csvContent = await writeToString(dataRows, {
+      quote: true,
+      includeEndRowDelimiter: true,
+    });
 
-    // Build the final CSV content to write
-    // (header only if a new file or not appending)
-    const rowsToWrite = needsHeader
-      ? [headerRow.join(","), ...dataRows]
-      : dataRows;
+    console.log(csvContent);
 
-    // Always add a trailing newline between writes
-    const csvContent = rowsToWrite.join("\n") + "\n";
-
-    if (shouldAppend) {
-      fs.appendFileSync(TMP_OUTPUT_CSV, csvContent, { encoding: "utf8" });
-      console.log(`Appended ${fileResults.length} items to ${TMP_OUTPUT_CSV}`);
-    } else {
-      fs.writeFileSync(TMP_OUTPUT_CSV, csvContent, { encoding: "utf8" });
-      console.log(`Wrote ${fileResults.length} items to ${TMP_OUTPUT_CSV}`);
-    }
+    fs.appendFileSync(TMP_OUTPUT_CSV, csvContent, { encoding: "utf8" });
   }
 
   public static async validateOutputCsv(): Promise<boolean> {
