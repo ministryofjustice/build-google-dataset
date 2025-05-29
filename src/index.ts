@@ -215,12 +215,14 @@ async function buildDataset(): Promise<DatasetSummary> {
     }
   }
 
+  CSVUtils.initCSVOutputFile();
+
   await PromisePool.withConcurrency(GOOGLE_API_CONCURRENCY)
     .for(emails)
     .process(async (email: string, index: number) => {
       const files = await getMigratedFilesByEmail(email, index);
 
-      CSVUtils.writeOutputCsv(files, { append: true });
+      await CSVUtils.writeOutputCsv(files);
 
       summary.processedCount += files.length;
 
