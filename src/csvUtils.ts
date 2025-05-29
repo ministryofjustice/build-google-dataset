@@ -117,12 +117,12 @@ export class CSVUtils {
       let invalidRows = 0;
 
       // Ensure file exists before appending.
-      if (!fs.existsSync("/tmp/invalid_rows.csv")) {
-        fs.writeFileSync("/tmp/invalid_rows.csv", ""); // Create file if it doesn't exist.
-      }
+      // if (!fs.existsSync("/tmp/invalid_rows.csv")) {
+      //   fs.writeFileSync("/tmp/invalid_rows.csv", ""); // Create file if it doesn't exist.
+      // }
 
       // Delete contents of invalid_rows.csv before validation.
-      fs.writeFileSync("/tmp/invalid_rows.csv", "", { encoding: "utf8" });
+      // fs.writeFileSync("/tmp/invalid_rows.csv", "", { encoding: "utf8" });
 
       parseFile(`/tmp/${OUTPUT_CSV}`, {
         headers: true,
@@ -135,11 +135,11 @@ export class CSVUtils {
         .on("data-invalid", (row: any) => {
           console.log("Invalid row in validateOutputCsv");
           // Append row to /tmp/invalid_rows.csv for debugging.
-          fs.appendFileSync(
-            "/tmp/invalid_rows.csv",
-            JSON.stringify(row) + "\n",
-            { encoding: "utf8" },
-          );
+          // fs.appendFileSync(
+          //   "/tmp/invalid_rows.csv",
+          //   JSON.stringify(row) + "\n",
+          //   { encoding: "utf8" },
+          // );
           invalidRows++;
         })
         .on("end", () => {
