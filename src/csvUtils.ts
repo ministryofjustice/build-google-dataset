@@ -115,4 +115,27 @@ export class CSVUtils {
       console.log(`Wrote ${fileResults.length} items to ${TMP_OUTPUT_CSV}`);
     }
   }
+
+  public static async validateOutputCsv(): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      let invalidRows = 0;
+
+      parseFile(`/tmp/${OUTPUT_CSV}`, {
+        headers: true,
+        strictColumnHandling: true,
+      })
+        .on("error", (error: any) =>
+          console.log("Error in validateOutputCsv", error),
+        )
+        .on("data", () => {})
+        .on("data-invalid", (row: any) => {
+          console.log("Invalid row in validateOutputCsv");
+          invalidRows++;
+        })
+        .on("end", () => {
+          console.log(`validateOutputCsv: ${invalidRows} invalid rows.`);
+          resolve(invalidRows === 0);
+        });
+    });
+  }
 }
