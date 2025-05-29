@@ -103,6 +103,7 @@ export class CSVUtils {
 
     const csvContent = await writeToString(dataRows, {
       quote: true,
+      quoteColumns: true,
       includeEndRowDelimiter: true,
     });
 
