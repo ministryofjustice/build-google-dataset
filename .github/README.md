@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This repository has been archived. In June 2025, the application was successfully run; and the output was imported into the [migration-link-exchange](https://github.com/ministryofjustice/migration-link-exchange-api) project.
+
 <div align="center">
 
 <br>
